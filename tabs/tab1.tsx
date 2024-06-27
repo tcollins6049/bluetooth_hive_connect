@@ -1,29 +1,20 @@
 // Import necessary modules from React and React Native
 import React, { useEffect, useState, useCallback } from 'react';
 import { 
-    Alert, 
     Modal, 
     Pressable, 
     View, 
     Text, 
     TextInput, 
-    Button, 
     StyleSheet,
     ScrollView,
     TouchableOpacity
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import RNFS from 'react-native-fs';
-
-// Import navigation components for top tab navigation
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-// Import Bluetooth manager from react-native-ble-plx for BLE communicaiton
-import { BleManager } from 'react-native-ble-plx';
-// Import base64 utility for encoding and decoding
 import base64 from 'react-native-base64';
-
 // Instantiate a Bluetooth manager
 import manager from '../ManagerFiles/BLEManagerSingleton';
+
 
 /**
  * FirstTab Component
@@ -33,7 +24,16 @@ import manager from '../ManagerFiles/BLEManagerSingleton';
  * @returns {JSX.Element} - Rendered component
  */
 const FirstTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
-  
+  const servUUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
+  const start_time_UUID = '00000101-710e-4a5b-8d75-3e5b444bc3cf';
+  const end_time_UUID = '00000102-710e-4a5b-8d75-3e5b444bc3cf';
+  const duration_UUID = '00000103-710e-4a5b-8d75-3e5b444bc3cf';
+  const interval_UUID = '00000104-710e-4a5b-8d75-3e5b444bc3cf';
+  const v_start_time_UUID = '00000105-710e-4a5b-8d75-3e5b444bc3cf';
+  const v_end_time_UUID = '00000106-710e-4a5b-8d75-3e5b444bc3cf';
+  const v_duration_UUID = '00000107-710e-4a5b-8d75-3e5b444bc3cf';
+  const v_interval_UUID = '00000108-710e-4a5b-8d75-3e5b444bc3cf';
+
   // Define the type for Variables, so we can access and change our variable values.
   type VariablesType = {
     capture_window_start_time: string;
@@ -202,7 +202,7 @@ const FirstTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
  * Handles the submission of changes to the BLE device.
  */
   const handleSubmit = async () => {
-    const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+    const serviceUUID = servUUID;
     
     try {
       // Check if the device is still connected
@@ -249,49 +249,37 @@ const FirstTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       // The following variables modify values for all sensors other than video
       // capture_window_start_time: Write to device if it has been changed.
       if (variables.capture_window_start_time !== originalVariables.capture_window_start_time) {
-        writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', 
-                            '00000005-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'capture_window_start_time');
+        writeCharacteristic(servUUID, start_time_UUID, 'capture_window_start_time');
       }
       // capture_window_end_time: Write to device if it has been changed.
       if (variables.capture_window_end_time !== originalVariables.capture_window_end_time) {
-        writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', 
-                            '00000006-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'capture_window_end_time');
+        writeCharacteristic(servUUID, end_time_UUID, 'capture_window_end_time');
       }
       // capture_duration_seconds: Write to device if it has been changed.
       if (variables.capture_duration_seconds !== originalVariables.capture_duration_seconds) {
-        writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', 
-                            '00000007-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'capture_duration_seconds');
+        writeCharacteristic(servUUID, duration_UUID, 'capture_duration_seconds');
       }
       // capture_interval_seconds: Write to device if it has been changed.
       if (variables.capture_interval_seconds !== originalVariables.capture_interval_seconds) {
-        writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', 
-                            '00000008-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'capture_interval_seconds');
+        writeCharacteristic(servUUID, interval_UUID, 'capture_interval_seconds');
       }
 
       // The following variables modify values only for video
       // capture_interval_seconds: Write to device if it has been changed.
       if (variables.v_capture_window_start_time !== originalVariables.v_capture_window_start_time) {
-        writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000012-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'v_capture_window_start_time');
+        writeCharacteristic(servUUID, v_start_time_UUID, 'v_capture_window_start_time');
       }
       // capture_interval_seconds: Write to device if it has been changed.
       if (variables.v_capture_window_end_time !== originalVariables.v_capture_window_end_time) {
-        writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000013-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'v_capture_window_end_time');
+        writeCharacteristic(servUUID, v_end_time_UUID, 'v_capture_window_end_time');
       }
       // capture_interval_seconds: Write to device if it has been changed.
       if (variables.v_capture_duration_seconds !== originalVariables.v_capture_duration_seconds) {
-        writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000014-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'v_capture_duration_seconds');
+        writeCharacteristic(servUUID, v_duration_UUID, 'v_capture_duration_seconds');
       }
       // capture_interval_seconds: Write to device if it has been changed.
       if (variables.v_capture_interval_seconds !== originalVariables.v_capture_interval_seconds) {
-        writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000015-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'v_capture_interval_seconds');
+        writeCharacteristic(servUUID, v_interval_UUID, 'v_capture_interval_seconds');
       }
 
       console.log("Variables updated successfully.");
@@ -305,37 +293,29 @@ const FirstTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   const fetchData = async () => {
     // The following variables are for every sensor besides video
     // Read for capture_window_start_time
-    await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000005-710e-4a5b-8d75-3e5b444bc3cf',
-                            'capture_window_start_time');
+    await readCharacteristic(servUUID, start_time_UUID, 'capture_window_start_time');
     
     // Read for capture_window_end_time              
-    await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000006-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'capture_window_end_time');
+    await readCharacteristic(servUUID, end_time_UUID, 'capture_window_end_time');
 
     // Read for capture_duration_seconds
-    await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000007-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'capture_duration_seconds');
+    await readCharacteristic(servUUID, duration_UUID, 'capture_duration_seconds');
                           
     // Read for capture_interval_seconds
-    await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000008-710e-4a5b-8d75-3e5b444bc3cf', 
-                              'capture_interval_seconds');
+    await readCharacteristic(servUUID, interval_UUID, 'capture_interval_seconds');
 
     // The following variables are only for video
     // Read for capture_window_start_time
-    await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000012-710e-4a5b-8d75-3e5b444bc3cf',
-                            'v_capture_window_start_time');
+    await readCharacteristic(servUUID, v_start_time_UUID, 'v_capture_window_start_time');
     
     // Read for capture_window_end_time              
-    await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000013-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'v_capture_window_end_time');
+    await readCharacteristic(servUUID, v_end_time_UUID, 'v_capture_window_end_time');
 
     // Read for capture_duration_seconds
-    await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000014-710e-4a5b-8d75-3e5b444bc3cf', 
-                            'v_capture_duration_seconds');
+    await readCharacteristic(servUUID, v_duration_UUID, 'v_capture_duration_seconds');
                           
     // Read for capture_interval_seconds
-    await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000015-710e-4a5b-8d75-3e5b444bc3cf', 
-                              'v_capture_interval_seconds');
+    await readCharacteristic(servUUID, v_interval_UUID, 'v_capture_interval_seconds');
   };
 
 

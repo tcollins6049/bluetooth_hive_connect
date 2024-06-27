@@ -17,7 +17,7 @@ import FifthTab from '../tabs/tab5';
 const Tab = createMaterialTopTabNavigator();
 
 
-const FourthTabScreen: React.FC<{ route: any, navigation: any }> = ({ route, navigation }) => {
+const TabScreen: React.FC<{ route: any, navigation: any }> = ({ route, navigation }) => {
   const { deviceId, deviceName } = route.params;
   return (
     <Tab.Navigator>
@@ -87,5 +87,5 @@ const styles = StyleSheet.create({
 });
 
 
-export default FourthTabScreen;
+export default TabScreen;
 

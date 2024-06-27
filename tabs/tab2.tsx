@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
-  Button,
   StyleSheet,
   Alert,
   Platform,
@@ -20,9 +19,12 @@ import { Buffer } from 'buffer';
 
 const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
   const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-  const videoCharacteristicUUID = '00000011-710e-4a5b-8d75-3e5b444bc3cf';
-  const audioCharacteristicUUID = '00000025-710e-4a5b-8d75-3e5b444bc3cf';
-  const FresetCharacteristicUUID = '00000022-710e-4a5b-8d75-3e5b444bc3cf';
+  const audioFileInfoUUID = '00000201-710e-4a5b-8d75-3e5b444bc3cf';
+  const videoFileInfoUUID = '00000202-710e-4a5b-8d75-3e5b444bc3cf';
+
+  const videoCharacteristicUUID = '00000203-710e-4a5b-8d75-3e5b444bc3cf';
+  const audioCharacteristicUUID = '00000205-710e-4a5b-8d75-3e5b444bc3cf';
+  const FresetCharacteristicUUID = '00000204-710e-4a5b-8d75-3e5b444bc3cf';
 
   const [wavImagePath, setWavImagePath] = useState('');
   const [videoImagePath, setVideoImagePath] = useState('');
@@ -32,12 +34,13 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
   const [videoFileSize, setVideoFileSize] = useState<string>("No File Found");
   const [videoDate, setVideoDate] = useState<string>("No File Found");
 
-  const [audioError, setAudioError] = useState<boolean>(false);
-  const [videoError, setVideoError] = useState<boolean>(false);
-  const [audioErrorText, setAudioErrorText] = useState<string | null>(null);
-  const [videoErrorText, setVideoErrorText] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ audio: boolean, video: boolean, audioText: string | null, videoText: string | null }>({
+    audio: false,
+    video: false,
+    audioText: null,
+    videoText: null,
+  });
 
-  let generalError = false;
   
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -50,17 +53,9 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
 
       const initial = async () => {
         // Fetch the file when the tab is focused
-        await readFileInfoCharacteristic(
-          '00000001-710e-4a5b-8d75-3e5b444bc3cf',
-          '00000009-710e-4a5b-8d75-3e5b444bc3cf',
-          'audio'
-        );
+        await readFileInfoCharacteristic(serviceUUID, audioFileInfoUUID, 'audio');
 
-        await readFileInfoCharacteristic(
-          '00000001-710e-4a5b-8d75-3e5b444bc3cf',
-          '00000030-710e-4a5b-8d75-3e5b444bc3cf',
-          'video'
-        )
+        await readFileInfoCharacteristic(serviceUUID, videoFileInfoUUID, 'video');
 
         isDuringAppmais();
       }
@@ -108,11 +103,9 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
     try {
       // Read characteristics for the deviceId and wait for completion
       const readData = await manager.readCharacteristicForDevice(deviceId, serviceUUID, characteristicUUID);
-      // console.log("Data read from the ble device: ", readData);
   
       // Extract the base64 encoded value from the read data
       let base64Value = readData.value;
-      // console.log("Base64 value: ", base64Value);
   
       if (base64Value) {
         // Decode the base64 encoded value
@@ -176,7 +169,6 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
     const megabytes = bytes / (1024 ** 2);
     const gigabytes = bytes / (1024 ** 3);
   
-    console.log("HHHHHHHHHHHHHHHHHHHHHH", currSize)
     if (gigabytes >= 1) {
       setSize(`${gigabytes.toFixed(2)} GB`);
     } else if (megabytes >= 1) {
@@ -215,7 +207,6 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
 
       return null;
     } catch (error) {
-      generalError = true;
       console.log('Error requesting chunk from GATT server:', error);
       return null; // Return an empty array in case of error
     }
@@ -274,7 +265,6 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
       // console.log("ALL CHUNKS: ", allChunks)
       await saveToFile(combinedData, file_name, setImagePath);
     } catch (error) {
-      generalError = true;
       console.log("Error occured in fetchFile: ", error);
     }
   }
@@ -295,7 +285,6 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
         Alert.alert('File downloaded', `File saved to ${path}`);
         setImagePath(path);
     } catch (error) {
-        generalError = true;
         console.error('Error saving file:', error);
     }
   }
@@ -304,14 +293,8 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
   const handleFetchVideoFile = async () => {
     try {
         await fetchFile(serviceUUID, videoCharacteristicUUID, FresetCharacteristicUUID, 'video_frame.jpg', setVideoImagePath);
-        if (generalError) {
-          setVideoErrorText('Failed to pull video file');
-          generalError = false;
-        }
     } catch (error) {
         console.log('Error fetching file:', error);
-        generalError = false;
-        setVideoErrorText('Failed to pull video file');
     }
   };
 
@@ -319,23 +302,17 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
   const handleFetchWaveformFile = async () => {
     try{
       await fetchFile(serviceUUID, audioCharacteristicUUID, FresetCharacteristicUUID, 'audio_waveform.jpg', setWavImagePath);
-      if (generalError) {
-        setAudioErrorText("Failed to pull file");
-        generalError = false;
-      }
     } catch (error) {
       console.log("Error fetching file:", error);
-      setAudioErrorText('Failed to pull audio file');
-      generalError = false;
     }
   }
 
 
   const isDuringAppmais = async (): Promise<boolean> => {
-    const videoStart = (await manager.readCharacteristicForDevice(deviceId, serviceUUID, '00000012-710e-4a5b-8d75-3e5b444bc3cf')).value;
-    const videoEnd = (await manager.readCharacteristicForDevice(deviceId, serviceUUID, '00000013-710e-4a5b-8d75-3e5b444bc3cf')).value;
-    const videoDur = (await manager.readCharacteristicForDevice(deviceId, serviceUUID, '00000014-710e-4a5b-8d75-3e5b444bc3cf')).value;
-    const videoInt = (await manager.readCharacteristicForDevice(deviceId, serviceUUID, '00000015-710e-4a5b-8d75-3e5b444bc3cf')).value;
+    const videoStart = (await manager.readCharacteristicForDevice(deviceId, serviceUUID, '00000105-710e-4a5b-8d75-3e5b444bc3cf')).value;
+    const videoEnd = (await manager.readCharacteristicForDevice(deviceId, serviceUUID, '00000106-710e-4a5b-8d75-3e5b444bc3cf')).value;
+    const videoDur = (await manager.readCharacteristicForDevice(deviceId, serviceUUID, '00000107-710e-4a5b-8d75-3e5b444bc3cf')).value;
+    const videoInt = (await manager.readCharacteristicForDevice(deviceId, serviceUUID, '00000108-710e-4a5b-8d75-3e5b444bc3cf')).value;
 
     if (videoStart && videoEnd && videoDur && videoInt) {
       const stMatch = (base64.decode(videoStart).match(/^\D*(\d+)\D*/));
@@ -383,7 +360,6 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
         <TouchableOpacity style={styles.Button} onPress={handleFetchWaveformFile}>
           <Text style={styles.ButtonText}>Get Audio Waveform</Text>
         </TouchableOpacity>
-        {audioError && <Text style={styles.errorText}>{audioError}</Text>}
       </View>
 
       {/* Video Section */}
@@ -405,7 +381,6 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
           <TouchableOpacity style={styles.Button} onPress={() => {}}>
             <Text style={styles.ButtonText}>Take Picture</Text>
           </TouchableOpacity>
-          {videoError && <Text style={styles.errorText}>{videoError}</Text>}
         </View>
       </View>
 

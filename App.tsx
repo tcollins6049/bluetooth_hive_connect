@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import ScanScreen from './views/ScanScreen';
 import DeviceListScreen from './views/DeviceListScreen';
 import DeviceDetailScreen from './views/DeviceDetailsScreen';
-import FourthScreen from './views/FourthScreen';
+import TabScreen from './views/TabScreen';
 // import { BLEManagerProvider } from './ManagerFiles/BLEManagerContext';
 
 
@@ -17,7 +17,7 @@ const App: React.FC = () => {
         <Stack.Navigator initialRouteName="Scan">
           <Stack.Screen name="DeviceList" component={DeviceListScreen} options={{ title: 'Device List' }} />
           <Stack.Screen name="DeviceDetail" component={DeviceDetailScreen} options={{ title: 'Device Detail' }} />
-          <Stack.Screen name='FourthScreen' component={FourthScreen} options={{ title: 'Device Details' }} />
+          <Stack.Screen name='TabScreen' component={TabScreen} options={{ title: 'Device Details' }} />
         </Stack.Navigator>
       </NavigationContainer>
   );
