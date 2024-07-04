@@ -2,6 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // Imports for other views
+import PasswordScreen from './views/PasswordScreen';
 import ScanScreen from './views/ScanScreen';
 import DeviceListScreen from './views/DeviceListScreen';
 import DeviceDetailScreen from './views/DeviceDetailsScreen';
@@ -16,6 +17,7 @@ const App: React.FC = () => {
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Scan">
           <Stack.Screen name="DeviceList" component={DeviceListScreen} options={{ title: 'Device List' }} />
+          <Stack.Screen name='Password' component={PasswordScreen} options={{ title: 'Password Verification' }} />
           <Stack.Screen name="DeviceDetail" component={DeviceDetailScreen} options={{ title: 'Device Detail' }} />
           <Stack.Screen name='TabScreen' component={TabScreen} options={{ title: 'Device Details' }} />
         </Stack.Navigator>

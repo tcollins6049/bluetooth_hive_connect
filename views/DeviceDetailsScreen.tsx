@@ -74,13 +74,13 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
   };
 
 
-  const goToFourthScreen = () => {
-    navigation.navigate('FourthScreen', { deviceId: deviceId, deviceName: deviceName});
+  const goToTabScreen = () => {
+    navigation.navigate('TabScreen', { deviceId: deviceId, deviceName: deviceName});
   };
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Button title="Device Details" onPress={goToFourthScreen} />
+      <Button title="Device Details" onPress={goToTabScreen} />
     </View>
   );
 };

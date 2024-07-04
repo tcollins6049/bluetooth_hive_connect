@@ -1,25 +1,18 @@
 // Import necessary modules from React and React Native
-import React, { useEffect, useState, useCallback } from 'react';
-import { 
-    Alert, 
+import React, { useState, useCallback } from 'react';
+import {  
     Modal, 
     Pressable, 
     View, 
     Text, 
-    TextInput, 
-    Button, 
     StyleSheet,
-    ScrollView,
-    Switch,
     TouchableOpacity
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-
-// Import base64 utility for encoding and decoding
 import base64 from 'react-native-base64';
-
 // Instantiate a Bluetooth manager
 import manager from '../ManagerFiles/BLEManagerSingleton';
+
 
 /**
  * FourthTab Component
@@ -29,6 +22,14 @@ import manager from '../ManagerFiles/BLEManagerSingleton';
  * @returns {JSX.Element} - Rendered component
  */
 const FourthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
+    const servUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+    const mic_UUID = '00000401-710e-4a5b-8d75-3e5b444bc3cf';
+    const camera_UUID = '00000402-710e-4a5b-8d75-3e5b444bc3cf';
+    const temp_UUID = '00000403-710e-4a5b-8d75-3e5b444bc3cf';
+    const airquality_UUID = '00000404-710e-4a5b-8d75-3e5b444bc3cf';
+    const scale_UUID = '00000405-710e-4a5b-8d75-3e5b444bc3cf';
+    const cpu_UUID = '00000406-710e-4a5b-8d75-3e5b444bc3cf';
+
     // Define the type for Variables, so we can access and change our variable values.
     type VariablesType = {
         audio: boolean;
@@ -68,23 +69,22 @@ const FourthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceI
      */
     const fetchData = async () => {
         // Read auto_start value for microphone
-        await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '000000016-710e-4a5b-8d75-3e5b444bc3cf',
-                                'audio');
+        await readCharacteristic(servUUID, mic_UUID, 'audio');
+
         // Read auto_start value for camera
-        await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '000000017-710e-4a5b-8d75-3e5b444bc3cf',
-                                'video');
+        await readCharacteristic(servUUID, camera_UUID, 'video');
+
         // Read auto_start value for cpu
-        await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '000000018-710e-4a5b-8d75-3e5b444bc3cf',
-                                'temp');
+        await readCharacteristic(servUUID, temp_UUID, 'temp');
+
         // Read auto_start value for air quality
-        await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '000000019-710e-4a5b-8d75-3e5b444bc3cf',
-                                'airquality');
+        await readCharacteristic(servUUID, airquality_UUID, 'airquality');
+
         // Read auto_start value for scale
-        await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '000000020-710e-4a5b-8d75-3e5b444bc3cf',
-                                'scale');
+        await readCharacteristic(servUUID, scale_UUID, 'scale');
+
         // Read auto_start value for cpu
-        await readCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '000000021-710e-4a5b-8d75-3e5b444bc3cf',
-                                'cpu');
+        await readCharacteristic(servUUID, cpu_UUID, 'cpu');
     };
 
     /**
@@ -101,12 +101,10 @@ const FourthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceI
     
         // Extract the base64 encoded value from the read data
         let base64Value = readData.value;
-        console.log("Base64 value: ", base64Value);
     
         if (base64Value) {
             // Decode the base64 encoded value
             let decodedValue = base64.decode(base64Value);
-            console.log("Decoded value: ", decodedValue);
     
             // Trim whitespace from decoded value
             let trimmedValue = decodedValue.trim();
@@ -114,7 +112,6 @@ const FourthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceI
             const match = trimmedValue.match(/:\s*(\S+)/);
             if (match) trimmedValue = match[1];
             trimmedValue = trimmedValue.trim();
-            console.log("HHHHHHHHHHHHHHHHH", trimmedValue);
 
             // Convert 'True'/'False' string to boolean
             let booleanValue = trimmedValue.toLowerCase() === 'true';
@@ -188,8 +185,7 @@ const FourthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceI
      * Handles the submission of changes to the BLE device.
      */
     const handleSubmit = async () => {
-        console.log("INSIDE HANDLESUBMIT")
-        const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+        const serviceUUID = servUUID;
         
         try {
             // Check if the device is still connected
@@ -220,36 +216,23 @@ const FourthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceI
     */
     const submitChanges = async() => {
         console.log("INSIDE submit changes")
-        // The following variables modify values for all sensors other than video
-        // capture_window_start_time: Write to device if it has been changed.
         if (variables.audio !== originalVariables.audio) {
-          writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000016-710e-4a5b-8d75-3e5b444bc3cf', 
-                              'audio');
+          writeCharacteristic(servUUID, mic_UUID, 'audio');
         }
-        // capture_window_start_time: Write to device if it has been changed.
         if (variables.video !== originalVariables.video) {
-            writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000017-710e-4a5b-8d75-3e5b444bc3cf', 
-                                'video');
+            writeCharacteristic(servUUID, camera_UUID, 'video');
         }
-        // capture_window_start_time: Write to device if it has been changed.
         if (variables.temp !== originalVariables.temp) {
-            writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000018-710e-4a5b-8d75-3e5b444bc3cf', 
-                                'temp');
+            writeCharacteristic(servUUID, temp_UUID, 'temp');
         }
-        // capture_window_start_time: Write to device if it has been changed.
         if (variables.airquality !== originalVariables.airquality) {
-            writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000019-710e-4a5b-8d75-3e5b444bc3cf', 
-                                'airquality');
+            writeCharacteristic(servUUID, airquality_UUID, 'airquality');
         }
-        // capture_window_start_time: Write to device if it has been changed.
         if (variables.scale !== originalVariables.scale) {
-            writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000020-710e-4a5b-8d75-3e5b444bc3cf', 
-                                'scale');
+            writeCharacteristic(servUUID, scale_UUID, 'scale');
         }
-        // capture_window_start_time: Write to device if it has been changed.
         if (variables.cpu !== originalVariables.cpu) {
-            writeCharacteristic('00000001-710e-4a5b-8d75-3e5b444bc3cf', '00000021-710e-4a5b-8d75-3e5b444bc3cf', 
-                                'cpu');
+            writeCharacteristic(servUUID, cpu_UUID, 'cpu');
         }
   
         console.log("Variables updated successfully.");
