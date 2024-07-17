@@ -13,7 +13,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
 // Instantiate a Bluetooth manager
-import manager from '../ManagerFiles/BLEManagerSingleton';
+import manager from '../../ManagerFiles/BLEManagerSingleton';
 
 
 /**
@@ -78,11 +78,6 @@ const FirstTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   // useEffect hook to fetch data from characteristics once this tab opens.
   useEffect(() => {
     fetchData();
-
-    // Cleanup manager
-    return () => {
-      manager.destroy();
-    }
   }, []);
 
   // useFocusEffect hook to fetch data whenever the tab is focused.
@@ -503,13 +498,10 @@ const styles = StyleSheet.create({
       backgroundColor: '#f44336',
   },
   submitButton: {
-    marginTop: 20,
-    marginVertical: 20,
     paddingVertical: 15,
     paddingHorizontal: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: 'transparent', // Set to transparent to inherit parent background
     alignItems: 'center',
-    alignSelf: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
   },

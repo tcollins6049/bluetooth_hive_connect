@@ -66,7 +66,7 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           setIsConnecting(false);
           setModalVisible(false);
           // navigation.navigate('DeviceDetail', { deviceId: device.id, deviceName: device.name });
-          navigation.navigate('Password');
+          navigation.navigate('Password', { deviceId: device.id, deviceName: device.name });
       } catch (error) {
           if (error instanceof Error && error.message === 'Connection cancelled') {
               console.log('Connection attempt cancelled');

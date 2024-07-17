@@ -9,7 +9,7 @@ import {
   Modal,
   TouchableOpacity,
 } from 'react-native';
-import manager from '../ManagerFiles/BLEManagerSingleton';
+import manager from '../../ManagerFiles/BLEManagerSingleton';
 import base64 from 'react-native-base64';
 
 const FifthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
@@ -85,6 +85,7 @@ const FifthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   const confirmSendCommand = async () => {
     setIsModalVisible(false);
     await sendCommand(command);
+    setCommand("");
   };
 
   const sendQuickCommand = (command: string) => {
@@ -101,13 +102,26 @@ const FifthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
           <View style={styles.horizontalLine} />
         </View>
 
-        <View style={styles.textboxContainer}>
+        {/*<View style={styles.textboxContainer}>
           <TextInput
             style={styles.input}
             onChangeText={setCommand}
             value={command}
             placeholder="Type your command here..."
           />
+        </View>*/}
+        <View style={styles.textboxContainer}>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              onChangeText={setCommand}
+              value={command}
+              placeholder="Type your command here..."
+            />
+            <TouchableOpacity style={styles.clearButton} onPress={() => setCommand('')}>
+              <Text style={styles.clearButtonText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <Text style={styles.quickCommandsTitle}>Quick Commands</Text>
@@ -186,12 +200,16 @@ const styles = StyleSheet.create({
     marginVertical: 10, // Adjust the vertical margin as needed
   },
   input: {
-    height: 40,
+    /*height: 40,
     width: '80%',
     borderColor: 'gray',
     borderWidth: 1,
     paddingHorizontal: 10,
-    marginBottom: 20,
+    marginBottom: 20,*/
+    flex: 1,
+    borderColor: 'gray',
+    borderWidth: 1,
+    padding: 10,
   },
   quickCommandsTitle: {
     fontSize: 18,
@@ -277,6 +295,21 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: 'white',
     fontSize: 16,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  clearButton: {
+    marginLeft: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 5,
+  },
+  clearButtonText: {
+    color: 'gray',
+    fontWeight: 'bold',
   },
 });
 

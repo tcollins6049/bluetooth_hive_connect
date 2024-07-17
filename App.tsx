@@ -7,7 +7,9 @@ import ScanScreen from './views/ScanScreen';
 import DeviceListScreen from './views/DeviceListScreen';
 import DeviceDetailScreen from './views/DeviceDetailsScreen';
 import TabScreen from './views/TabScreen';
-// import { BLEManagerProvider } from './ManagerFiles/BLEManagerContext';
+import VarScreen from './views/VarScreen';
+import AudVidScreen from './views/AudVidScreen';
+import CustomHeader from './files/CustomHeader';
 
 
 const Stack = createStackNavigator();
@@ -17,9 +19,11 @@ const App: React.FC = () => {
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Scan">
           <Stack.Screen name="DeviceList" component={DeviceListScreen} options={{ title: 'Device List' }} />
-          <Stack.Screen name='Password' component={PasswordScreen} options={{ title: 'Password Verification' }} />
-          <Stack.Screen name="DeviceDetail" component={DeviceDetailScreen} options={{ title: 'Device Detail' }} />
+          <Stack.Screen name='Password' component={PasswordScreen} options={{ header: () => <CustomHeader title="Password Verification" /> }} />
+          <Stack.Screen name="DeviceDetail" component={DeviceDetailScreen} options={{ title: 'Device Detail', header: () => <CustomHeader title="Device Detail" /> }} />
           <Stack.Screen name='TabScreen' component={TabScreen} options={{ title: 'Device Details' }} />
+          <Stack.Screen name='VarScreen' component={VarScreen} options={{title: 'Modifications'}} />
+          <Stack.Screen name='AudVidScreen' component={AudVidScreen} options={{ title: ''}} />
         </Stack.Navigator>
       </NavigationContainer>
   );

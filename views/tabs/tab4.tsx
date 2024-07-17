@@ -11,7 +11,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
 // Instantiate a Bluetooth manager
-import manager from '../ManagerFiles/BLEManagerSingleton';
+import manager from '../../ManagerFiles/BLEManagerSingleton';
 
 
 /**

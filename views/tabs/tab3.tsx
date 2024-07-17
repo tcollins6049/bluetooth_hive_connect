@@ -3,10 +3,10 @@ import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { BleManager } from 'react-native-ble-plx';
 import base64 from 'react-native-base64';
-import manager from '../ManagerFiles/BLEManagerSingleton';
+import manager from '../../ManagerFiles/BLEManagerSingleton';
 
 const ThirdTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
-  const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+    const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
     const cpu_file_UUID = '00000301-710e-4a5b-8d75-3e5b444bc3cf';
     const hum_file_UUID = '00000302-710e-4a5b-8d75-3e5b444bc3cf';
     const cpu_sensor_UUID = '00000002-710e-4a5b-8d75-3e5b444bc3cf';

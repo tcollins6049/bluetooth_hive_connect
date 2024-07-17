@@ -12,13 +12,13 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
-import manager from '../ManagerFiles/BLEManagerSingleton';
+import manager from '../../ManagerFiles/BLEManagerSingleton';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
-import isDuringAppmais from '../files/appmaisCheck';
+import isDuringAppmais from '../../files/appmaisCheck';
 
 
-const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
+const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
   const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
   const audioFileInfoUUID = '00000201-710e-4a5b-8d75-3e5b444bc3cf';
   const videoFileInfoUUID = '00000202-710e-4a5b-8d75-3e5b444bc3cf';
@@ -31,6 +31,9 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
   const [videoImagePath, setVideoImagePath] = useState('');
 
   const [audioFileSize, setAudioFileSize] = useState<string>('No File Found');
+  const [mp3FileSize, setMp3FileSize] = useState<string>("No File Found");
+  const [rms_level, set_rms_level] = useState<string>("No File Found");
+  const [silence, setSilence] = useState<string>("No File Found");
   const [audioDate, setAudioDate] = useState<string>("No File Found");
   const [videoFileSize, setVideoFileSize] = useState<string>("No File Found");
   const [videoDate, setVideoDate] = useState<string>("No File Found");
@@ -114,9 +117,15 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
         if (fileVariable === 'audio') {
           const decoded_fileSize = decodedValue.split(', ')[1]
           const decoded_filePath = decodedValue.split(', ')[0]
+          const decoded_mp3_size = decodedValue.split(', ')[2]
 
           setAudioDate(extractCreationDate(decoded_filePath))
           formatFileSize(decoded_fileSize, setAudioFileSize)
+          formatFileSize(decoded_mp3_size, setMp3FileSize);
+          set_rms_level(decodedValue.split(', ')[3]);
+          setSilence(decodedValue.split(', ')[4]);
+          console.log("HHHHHHHHHHHHHHHHH", decoded_fileSize, decoded_mp3_size);
+          console.log("UUUUUUUUUUUUUU", mp3FileSize);
         } else if (fileVariable === 'video') {
           const decoded_fileSize = decodedValue.split(', ')[1]
           const decoded_filePath = decodedValue.split(', ')[0]
@@ -324,7 +333,10 @@ const Tab2: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, de
       {/* Audio Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Audio</Text>
-        <Text>File size: {audioFileSize}</Text>
+        <Text>Wav File size: {audioFileSize}</Text>
+        <Text>Mp3 File Size: {mp3FileSize}</Text>
+        <Text>{rms_level}</Text>
+        <Text>{silence}</Text>
         <Text>Creation date: {audioDate}</Text>
         {wavImagePath ? (
           <Image source={{ uri: 'file://' + wavImagePath }} style={styles.image} resizeMode="contain" />
@@ -437,5 +449,5 @@ const styles = StyleSheet.create({
   },
 });
   
-export default Tab2;
+export default AudioTab;
   
