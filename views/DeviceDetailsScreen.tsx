@@ -1,4 +1,4 @@
-/*import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, PermissionsAndroid, Button, Alert, StyleSheet, Text, TouchableOpacity, Dimensions } from 'react-native';
 
 import manager from '../ManagerFiles/BLEManagerSingleton';
@@ -8,72 +8,82 @@ import base64 from 'react-native-base64';
 import { LineChart } from 'react-native-chart-kit';
 
 
-const generateSampleData = () => {
-  return {
-    labels: ['8:00', '9:00', '10:00', '11:00', '12:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00'],
-    datasets: [
-      {
-        data: [30, 45, 35, 55, 40, 70, 65, 85, 75, 60, 50, 90],
-        strokeWidth: 2, // optional
-      },
-    ],
-  };
-};
-
-
 const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, navigation }) => {
+  // UUID's for needed characteristics
   const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
   const cpu_file_UUID = '00000303-710e-4a5b-8d75-3e5b444bc3cf';
+  const cpu_line_UUID = '00000301-710e-4a5b-8d75-3e5b444bc3cf';
+  const hum_line_UUID = '00000302-710e-4a5b-8d75-3e5b444bc3cf';
+  const cpu_sensor_UUID = '00000002-710e-4a5b-8d75-3e5b444bc3cf';
 
+  // Variables needed for handling file readings
+  const [fileReadings, setFileReadings] = useState({
+    cpuTemp: 'N/A',
+    humidity: 'N/A',
+    temp: 'N/A',
+    cpuUpdateString: 'N/A',
+    humUpdateString: 'N/A',
+    tempUpdateString: 'N/A'
+  });
+  const [sensorReadings, setSensorReadings] = useState({
+    cpuTemp: 'N/A'
+  });
   const { deviceId, deviceName } = route.params;
+
+  // Variables needed for appmais status screen
   const [status, setStatus] = useState('red');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-  const sampleData = generateSampleData();
+  // Variables needed for line graph creation
+  const [chartData, setChartData] = useState<any>(null);
+  const [selectedData, setSelectedData] = useState<{ label: string, value: number } | null>(null);
+  const [isSelected, setIsSelected] = useState<boolean>(false);
 
-  const tempData = [
-    { time: "14-15-00", value: 117.88 },
-    { time: "14-20-00", value: 122.26 },
-    { time: "14-25-00", value: 124.89 },
-    { time: "14-30-00", value: 124.89 },
-    { time: "14-35-00", value: 124.02 },
-    { time: "14-40-00", value: 125.77 },
-    { time: "14-45-00", value: 126.65 },
-    { time: "14-50-00", value: 124.89 },
-    { time: "14-55-00", value: 126.65 },
-    { time: "15-00-00", value: 125.77 },
-    { time: "15-05-00", value: 125.77 },
-    { time: "15-10-00", value: 126.65 }
-  ];
-
-
+  // Use effect specifying what happens when this screen is opened
   useEffect(() => {
     const data_start = async() => {
       requestBluetoothPermission();
 
+      await readAndParseCpuFileData();
 
-      // Read full cpu file for initial cpu data
-      const cpuFileData = await readCharacteristic(serviceUUID, cpu_file_UUID);
-      console.log("DATA HERE: ")
-      if (cpuFileData) {
-        console.log(base64.decode(cpuFileData.value!))
-      }
+      // Read data every 5 minutes
+      const intervalId = setInterval(readAndParseCpuFileData, 300000);
+
+      // Cleanup interval on unmount
+      return () => clearInterval(intervalId);
     }
 
     data_start();
-
-    //const interval = setInterval(() => {
-    //  addNewValue();
-    //}, 60000);
-    //return () => clearInterval(interval); // Cleanup on unmount
   }, []);
 
+  // Function for setting all data for file, sensor, and graph readings.
+  const readAndParseCpuFileData = async () => {
+    // Read full cpu file for initial cpu data
+    const cpuFileData = await readCharacteristic(serviceUUID, cpu_file_UUID);
+    // console.log("DATA HERE: ")
+    if (cpuFileData) {
+      // console.log(base64.decode(cpuFileData.value!))
+      const decodedData = base64.decode(cpuFileData.value!);
+      // console.log("DECODED DATA: ", decodedData);
+      const parsedData = parseData(decodedData);
+      // console.log("PARSED DATA: ", parsedData);
+      setChartData(parsedData);
 
-  // ------------------------------------- Testing Section: Getting all data from file for initial graph ----------------------------------- //
-  
 
-  // ---------------------------------------------------------------------------------------------------------------------------------------- //
+      // Pulls data from file and sensor
+      const cpuLineData = await readCharacteristic(serviceUUID, cpu_line_UUID);
+      const humTempLineData = await readCharacteristic(serviceUUID, hum_line_UUID);
+      const sensorData = await readCharacteristic(serviceUUID, cpu_sensor_UUID);
+      if (cpuLineData) {
+        processCpuLineData(cpuLineData);
+        processHumTempLineData(humTempLineData);
+      }
 
+      if (sensorData) {
+        processSensorData(sensorData);
+      }
+    }
+  };
 
   // Gets permission to use bluetooth on phone
   const requestBluetoothPermission = async () => {
@@ -99,6 +109,62 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
   };
 
 
+  // ------------------------------------- Methods for graph creation ----------------------------------- //
+  // Parses info from recieved file into data and labels used in graph creation
+  const parseData = (fileData: string) => {
+    const lines = fileData.trim().split('\n');
+    const labels: string[] = [];
+    const values: number[] = [];
+  
+    lines.forEach(line => {
+      const [time, value] = line.split(',');
+      if (time && value) {
+        labels.push(time.substring(0, 5).replace(/"/g, '')); // Remove quotes and convert "14-00-00" to "14:00"
+        values.push(parseFloat(value));
+      }
+    });
+  
+    return { labels, datasets: [{ data: values, strokeWidth: 2 }] };
+  };
+
+  // Function handling interaction of clicking point on graph and displaying point data
+  const handleDataPointClick = (data: { value: number, index: number, x: number, y: number }) => {
+    const { index, value, x, y } = data;
+    const label = chartData.labels[index];
+    setSelectedData({ label, value });
+    setIsSelected(true);
+  
+
+    // Get the dimensions of the screen
+    const screenWidth = Dimensions.get('window').width;
+    const screenHeight = Dimensions.get('window').height;
+
+    // Calculate the position for the tooltip
+    let tooltipX = x; // Adjust offset from the data point
+    const tooltipY = y + 100; // Adjust vertical position as needed
+
+    const tooltipWidth = 120;
+    if (tooltipX + tooltipWidth > screenWidth) {
+      tooltipX = screenWidth - tooltipWidth - 10; // Keep within screen width
+    }
+  
+    // Set the tooltip position dynamically
+    setTooltipPosition({ x: tooltipX, y: tooltipY });
+  };
+
+  // Function for closing the point data pop up
+  const clearSelectedData = () => {
+    setSelectedData(null);
+    setIsSelected(false);
+  };
+
+  // Variable used for settings x and y position of point data pop up
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number, y: number } | null>(null);
+
+
+  // -------------------------- Methods responsible for reading characteristics from GATT server ----------------------- //
+
+  // Function for reading a characteristic from the GATT server
   const readCharacteristic = async (serviceUUID: string, characteristicUUID: string) => {
     try {
         const readData = await manager.readCharacteristicForDevice(deviceId, serviceUUID, characteristicUUID);
@@ -109,18 +175,71 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
     }
   }
 
-  const goToVarScreen = () => {
-    navigation.navigate('VarScreen', { deviceId: deviceId, deviceName: deviceName});
-  };
 
-  const goToAVScreen = () => {
-    navigation.navigate('AudVidScreen', { deviceId: deviceId, deviceName: deviceName });
+  // ------------------------------ Methods for pulling data from file and sensor ---------------------------------- //
+
+  // Used to process line from cpu temp reading
+  const processCpuLineData = (data: any) => {
+    if (data.value) {
+      let decodedValue = base64.decode(data.value);
+
+      // Get CPU file reading
+      const cpuTemp = decodedValue.split(',')[1];
+      const cpuString = ((decodedValue.split(',')[2]).split('|')[1]);
+
+      setFileReadings(prevState => ({
+        ...prevState,
+        cpuTemp: cpuTemp,
+        cpuUpdateString: cpuString
+      }));
+    }
   }
 
+  // Used to process line from humidity temperature file reading
+  const processHumTempLineData = (data: any) => {
+    if (data.value) {
+      let decodedValue = base64.decode(data.value);
+
+      // Get humidity file reading
+      const temperature = decodedValue.split(',')[1];
+      const tempString = (decodedValue.split('|')[1]);
+      const humidity = (decodedValue.split(',')[2]).split('|')[0];
+
+      setFileReadings(prevState => ({
+        ...prevState,
+        humidity: humidity,
+        temp: temperature,
+        humUpdateString: tempString,
+        tempUpdateString: tempString
+      }))
+    }
+  }
+
+  // Used to process data recieved from cpu temp sensor
+  const processSensorData = (data: any) => {
+      setSensorReadings({
+        cpuTemp: base64.decode(data.value)
+      })
+  }
+
+  // ------------------------------ Methods for status modal ------------------------------------------------------------------ //
+
+  // Sets status modal visibility
   const toggleStatusModal = () => {
     setModalVisible(!modalVisible);
   }
 
+  // ---------------------------------- Remaining code is for the return and navigation --------------------------------------- //
+
+  // Navigates to screen with tabs variables, sensor enabling, and commands
+  const goToVarScreen = () => {
+    navigation.navigate('VarScreen', { deviceId: deviceId, deviceName: deviceName});
+  };
+
+  // Navigates to screen with video and audio tabs
+  const goToAVScreen = () => {
+    navigation.navigate('AudVidScreen', { deviceId: deviceId, deviceName: deviceName });
+  }
 
 
   return (
@@ -132,33 +251,51 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
         <View style={[styles.indicator, status === 'green' && styles.green]} />
         <View style={[styles.indicator, status === 'red' && styles.red]} />
       </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>CPU</Text>
+        <Text style={styles.updateDate}>{fileReadings.cpuUpdateString}</Text>
+        <Text style={styles.readingItem}>File: {fileReadings.cpuTemp}</Text>
+        <Text style={styles.readingItem}>Sensor: {sensorReadings.cpuTemp}</Text>
+      </View>
       <View style={styles.content}>
-        <LineChart
-          data={sampleData}
-          width={Dimensions.get('window').width - 16} // Adjusting width to fit within the screen
-          height={220}
-          chartConfig={{
-            backgroundColor: '#e26a00',
-            backgroundGradientFrom: '#fb8c00',
-            backgroundGradientTo: '#ffa726',
-            decimalPlaces: 2, // optional, defaults to 2dp
-            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            style: {
-              borderRadius: 16
-            },
-            propsForDots: {
-              r: '6',
-              strokeWidth: '2',
-              stroke: '#ffa726'
-            }
-          }}
-          bezier
-          style={{
-            marginVertical: 8,
-            borderRadius: 16
-          }}
-        />
+        {chartData && (
+          <LineChart
+            data={chartData}
+            width={Dimensions.get('window').width - 16}
+            height={220}
+            chartConfig={{
+              backgroundColor: '#e26a00',
+              backgroundGradientFrom: '#fb8c00',
+              backgroundGradientTo: '#ffa726',
+              decimalPlaces: 2,
+              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              style: {
+                borderRadius: 16,
+              },
+              propsForDots: {
+                r: '6',
+                strokeWidth: '2',
+                stroke: '#ffa726',
+              },
+            }}
+            bezier
+            onDataPointClick={handleDataPointClick} // Handle click event on data points
+            style={{
+              marginVertical: 8,
+              borderRadius: 16,
+            }}
+          />
+        )}
+        {isSelected && tooltipPosition && (
+          <View style={[styles.tooltip, { left: tooltipPosition.x, top: tooltipPosition.y }]}>
+            <Text style={styles.tooltipText}>{`${selectedData?.label}: ${selectedData?.value}`}</Text>
+            <TouchableOpacity onPress={clearSelectedData} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        
       </View>
       <View style={styles.footer}>
         <TouchableOpacity style={styles.deviceButton} onPress={goToVarScreen}>
@@ -172,7 +309,6 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
     </View>
   );
 };
-
 
 
 const styles = StyleSheet.create({
@@ -230,67 +366,53 @@ const styles = StyleSheet.create({
   red: {
     backgroundColor: 'red',
   },
-});
 
-
-export default DeviceDetailScreen;*/
-
-
-import React from 'react';
-import { View, Dimensions, StyleSheet } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
-
-const SimpleLineChart = () => {
-  const sampleData = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-    datasets: [
-      {
-        data: [20, 45, 28, 80, 99, 43],
-        strokeWidth: 2, // optional
-      },
-    ],
-  };
-
-  return (
-    <View style={styles.container}>
-      <LineChart
-        data={sampleData}
-        width={Dimensions.get('window').width - 16} // Adjusting width to fit within the screen
-        height={220}
-        chartConfig={{
-          backgroundColor: '#e26a00',
-          backgroundGradientFrom: '#fb8c00',
-          backgroundGradientTo: '#ffa726',
-          decimalPlaces: 2, // optional, defaults to 2dp
-          color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-          labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-          style: {
-            borderRadius: 16
-          },
-          propsForDots: {
-            r: '6',
-            strokeWidth: '2',
-            stroke: '#ffa726'
-          }
-        }}
-        bezier
-        style={{
-          marginVertical: 8,
-          borderRadius: 16
-        }}
-      />
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
+  tooltip: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    padding: 10,
+    borderRadius: 8,
+    zIndex: 100,
+  },
+  tooltipText: {
+    color: '#fff',
+  },
+  closeButton: {
+    marginTop: 5,
+    padding: 5,
+    backgroundColor: '#ff6347',
+    borderRadius: 5,
     alignItems: 'center',
-    backgroundColor: '#fff',
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+
+  section: {
+    marginBottom: 20,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 5,
+  },
+  updateDate: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+  },
+  readingItem: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 8,
+    marginLeft: 10,
   },
 });
 
-export default SimpleLineChart;
 
+export default DeviceDetailScreen;

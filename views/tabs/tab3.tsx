@@ -45,6 +45,9 @@ const ThirdTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
           const humTempFileData = await readCharacteristic(serviceUUID, hum_file_UUID);
 
           const sensorData = await readCharacteristic(serviceUUID, cpu_sensor_UUID);
+          const tempHumSensorData = await readCharacteristic(serviceUUID, '00000004-710e-4a5b-8d75-3e5b444bc3cf');
+          console.log("SENSOR DATA HERE")
+          if (tempHumSensorData) console.log(tempHumSensorData.value);
 
           if (cpuFileData) {
               processCpuFileData(cpuFileData);
