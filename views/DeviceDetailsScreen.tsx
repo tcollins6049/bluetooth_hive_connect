@@ -46,6 +46,20 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
 
       await readAndParseCpuFileData();
 
+      // Testing
+      const full_data = await readCharacteristic(serviceUUID, '00000303-710e-4a5b-8d75-3e5b444bc3cf')
+      console.log("LINE DATA");
+      console.log(base64.decode(full_data!.value!));
+
+      await resetOffset();
+      const line_data = await readCharacteristic(serviceUUID, '00000304-710e-4a5b-8d75-3e5b444bc3cf')
+      console.log("LINE DATA");
+      console.log(base64.decode(line_data!.value!));
+
+      const line_data2 = await readCharacteristic(serviceUUID, '00000304-710e-4a5b-8d75-3e5b444bc3cf')
+      console.log("LINE DATA");
+      console.log(base64.decode(line_data2!.value!));
+
       // Read data every 5 minutes
       const intervalId = setInterval(readAndParseCpuFileData, 300000);
 
@@ -55,6 +69,23 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
 
     data_start();
   }, []);
+
+
+  const resetOffset = async () => {
+    try {
+        await manager.writeCharacteristicWithResponseForDevice(
+            deviceId,
+            serviceUUID,
+            '00000305-710e-4a5b-8d75-3e5b444bc3cf',
+            base64.encode('reset')
+        );
+
+        console.log('Offset reset command sent');
+    } catch (error) {
+        console.log('Error resetting offset on GATT server:', error);
+    }
+  };
+
 
   // Function for setting all data for file, sensor, and graph readings.
   const readAndParseCpuFileData = async () => {
