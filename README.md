@@ -62,3 +62,9 @@ beemon_bluetooth_project
     │   
 ```
 
+## Extending the Application
+### 1. Adding a new sensor
+
+### 2. Changing Password
+
+
