@@ -7,11 +7,10 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
 ## Features
 
 - **BLE Communication:** Connects to a Raspberry Pi GATT server.
-- **Password Verification:** Securely sends and verifies a password with the server.
-- **Real-Time Data Monitoring:** Displays temperature and humidity data.
+- **Password Verification:** Securely sends and verifies a password with the pi.
+- **Real-Time Data Monitoring:** Displays sensor data.
 - **Chart Visualization:** Line graph representation of data, including handling of gaps (NaN values).
 - **Security:** Only allows access after successful password verification.
-- **Responsive UI:** Works on both Android and iOS devices.
 
 ## Installation
 
