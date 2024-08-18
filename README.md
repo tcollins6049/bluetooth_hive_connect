@@ -26,6 +26,6 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
 1. **Clone the repository:**
    
 
-##
+## Code Structure
 
 
