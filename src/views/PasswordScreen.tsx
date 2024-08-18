@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 // import { BleManager } from 'react-native-ble-plx';
-import manager from '../ManagerFiles/BLEManagerSingleton';
+import manager from '../files/BLEManagerSingleton';
 import base64 from 'react-native-base64';
 
 

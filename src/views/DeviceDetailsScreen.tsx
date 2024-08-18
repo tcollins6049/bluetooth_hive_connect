@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, PermissionsAndroid, Button, Alert, StyleSheet, Text, TouchableOpacity, Dimensions } from 'react-native';
 
-import manager from '../ManagerFiles/BLEManagerSingleton';
-import StatusModal from '../files/StatusModal';
+import manager from '../files/BLEManagerSingleton';
+import StatusModal from '../modals/StatusModal';
 import base64 from 'react-native-base64';
 
 import { LineChart } from 'react-native-chart-kit';

@@ -7,10 +7,10 @@ import {
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 // Import seperate tabs
-import FirstTab from './tabs/tab1';
-import ThirdTab from './tabs/tab3';
-import FourthTab from './tabs/tab4';
-import FifthTab from './tabs/tab5';
+import FirstTab from '../tabs/modifications';
+import ThirdTab from '../tabs/data';
+import FourthTab from '../tabs/sensors';
+import FifthTab from '../tabs/commands';
 
 // Instantiate a Bluetooth manager
 const Tab = createMaterialTopTabNavigator();

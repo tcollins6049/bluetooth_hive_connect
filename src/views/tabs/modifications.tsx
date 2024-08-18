@@ -13,7 +13,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
 // Instantiate a Bluetooth manager
-import manager from '../../ManagerFiles/BLEManagerSingleton';
+import manager from '../../files/BLEManagerSingleton';
 
 
 /**
@@ -23,7 +23,7 @@ import manager from '../../ManagerFiles/BLEManagerSingleton';
  * @param {string} props.deviceName - The name of the BLE device
  * @returns {JSX.Element} - Rendered component
  */
-const FirstTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
+const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
   const servUUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
   const start_time_UUID = '00000101-710e-4a5b-8d75-3e5b444bc3cf';
   const end_time_UUID = '00000102-710e-4a5b-8d75-3e5b444bc3cf';
@@ -554,4 +554,4 @@ const styles = StyleSheet.create({
 
 
 
-export default FirstTab;
+export default ModificationsTab;

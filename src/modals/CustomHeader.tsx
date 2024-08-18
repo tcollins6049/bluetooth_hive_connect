@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import manager from '../ManagerFiles/BLEManagerSingleton';
+import manager from '../files/BLEManagerSingleton';
 // import disconnectBleManager from '../utils/disconnectBleManager';
 import { StackNavigationProp } from '@react-navigation/stack';
 

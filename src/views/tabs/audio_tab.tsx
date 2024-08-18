@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
-import manager from '../../ManagerFiles/BLEManagerSingleton';
+import manager from '../../files/BLEManagerSingleton';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
 import isDuringAppmais from '../../files/appmaisCheck';

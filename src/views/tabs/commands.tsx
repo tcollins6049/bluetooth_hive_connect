@@ -9,10 +9,10 @@ import {
   Modal,
   TouchableOpacity,
 } from 'react-native';
-import manager from '../../ManagerFiles/BLEManagerSingleton';
+import manager from '../../files/BLEManagerSingleton';
 import base64 from 'react-native-base64';
 
-const FifthTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
+const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
   const [error, setError] = useState<string | null>(null);
   const [command, setCommand] = useState<string>('');
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
@@ -313,4 +313,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FifthTab;
+export default CommandsTab;

@@ -7,8 +7,8 @@ import {
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 // Import seperate tabs
-import SecondTab from './tabs/audio_tab';
-import VideoTab from './tabs/video_tab';
+import SecondTab from '../tabs/audio_tab';
+import VideoTab from '../tabs/video_tab';
 
 // Instantiate a Bluetooth manager
 const Tab = createMaterialTopTabNavigator();

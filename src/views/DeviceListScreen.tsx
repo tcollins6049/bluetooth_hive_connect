@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, PermissionsAndroid, StyleSheet, TouchableOpacity, Alert, FlatList } from 'react-native';
-import manager from '../ManagerFiles/BLEManagerSingleton';
-import ConnectingModal from '../files/connectingModal';
-import ScanningModal from '../files/ScanningModal';
+import manager from '../files/BLEManagerSingleton';
+import ConnectingModal from '../modals/connectingModal';
+import ScanningModal from '../modals/ScanningModal';
 import registered_devices, { DeviceInterface } from '../files/devices';
 
 
