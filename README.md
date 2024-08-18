@@ -28,7 +28,7 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
 
 ## Code Structure
 ### Organization
-Below are the important elements of the file structure for the application.
+Below are the important elements of the file structure for the application. For detailed descriptions on each file, view code_structure.md in the docs folder.
 ```
 beemon_bluetooth_project
 │   README.md
