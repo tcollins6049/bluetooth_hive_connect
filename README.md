@@ -26,6 +26,10 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
    ```bash
    git clone https://github.com/tcollins6049/bluetooth_hive_connect.git
    cd bluetooth_hive_connect
+2. **Install dependencies and run:**
+   ```bash
+   npm install
+   npm start
    
 
 ## Code Structure
