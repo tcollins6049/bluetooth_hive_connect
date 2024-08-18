@@ -28,22 +28,38 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
 
 ## Code Structure
 ### Organization
+Below are the important elements of the file structure for the application.
 ```
-project
+beemon_bluetooth_project
 │   README.md
-│   file001.txt    
+│   App.tsx   
 │
-└───folder1
-│   │   file011.txt
-│   │   file012.txt
-│   │
-│   └───subfolder1
-│       │   file111.txt
-│       │   file112.txt
-│       │   ...
+└───src
+│   └───files
+│       │   BLEManagerSingleton.ts
+│       │   appmaisCheck.tsx
+│       │   devices.tsx
+│   └───modals
+|       |   CustomHeader.tsx
+|       |   ScanningModal.tsx
+|       |   StatusModal.tsx
+|       |   connectingModal.tsx
+│   └───views
+|       └───navigation
+|       |       |   AudVidScreen.tsx
+|       |       |   VarScreen.tsx
+|       └───tabs
+|       |       |   audio_tab.tsx
+|       |       |   commands.tsx
+|       |       |   data.tsx
+|       |       |   modifications.tsx
+|       |       |   sensors.tsx
+|       |       |   video_tab.tsx
+|       |   DeviceDetailsScreen.tsx
+|       |   DeviceListScreen.tsx
+|       |   PasswordScreen.tsx
 │   
-└───folder2
-    │   file021.txt
-    │   file022.txt
+└───docs
+    │   
 ```
 
