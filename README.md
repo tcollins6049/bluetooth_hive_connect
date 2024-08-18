@@ -6,21 +6,20 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
 
 ## Features
 
-- **BLE Communication:** Connects to a Raspberry Pi GATT server.
+- **BLE Hive Connection:** Connects to a Raspberry Pi GATT server.
+- **BLE Hive Communication:** Communicates with Pi GATT server via characteristics.
 - **Password Verification:** Securely sends and verifies a password with the pi.
 - **Real-Time Data Monitoring:** Displays sensor data.
 - **Chart Visualization:** Line graph representation of data, including handling of gaps (NaN values).
-- **Security:** Only allows access after successful password verification.
+- **Pi Modifications:** Allows commands and modification of config file variables
 
 ## Installation
 
 ### Prerequisites
 
 - Node.js
-- npm or yarn
+- npm
 - React Native CLI
-- Xcode (for iOS)
-- Android Studio (for Android)
 
 ### Steps
 
@@ -28,5 +27,7 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
    ```bash
    git clone https://github.com/yourusername/yourprojectname.git
    cd yourprojectname
+
+##
 
 
