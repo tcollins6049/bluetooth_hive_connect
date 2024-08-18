@@ -24,9 +24,7 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
 ### Steps
 
 1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/yourprojectname.git
-   cd yourprojectname
+   
 
 ##
 
