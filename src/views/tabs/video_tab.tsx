@@ -17,6 +17,8 @@ import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
 import isDuringAppmais from '../../files/appmaisCheck';
 
+import LineGraph from '../../modals/Line_graph';
+
 
 const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
   const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
@@ -47,6 +49,7 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       const initial = async () => {
         // Fetch the file when the tab is focused
         await readFileInfoCharacteristic(serviceUUID, videoFileInfoUUID, 'video');
+        await get_cpu_graph_data();
 
         isDuringAppmais(deviceId);
       }
@@ -337,6 +340,65 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
         console.error('Error saving file:', error);
     }
   }
+
+
+  // --------------------------- Entropy Graph ----------------------- //
+  const [video_chartData, set_video_chartData] = useState<any>(null);
+
+  const resetOffset_graph = async () => {
+    try {
+        await manager.writeCharacteristicWithResponseForDevice(
+            deviceId,
+            serviceUUID,
+            '00000210-710e-4a5b-8d75-3e5b444bc3cf',
+            base64.encode('reset')
+        );
+
+        console.log('Offset reset command sent');
+    } catch (error) {
+        console.log('Error resetting offset on GATT server:', error);
+    }
+  };
+
+  const readCharacteristic = async (serviceUUID: string, characteristicUUID: string) => {
+    try {
+        const readData = await manager.readCharacteristicForDevice(deviceId, serviceUUID, characteristicUUID);
+        return readData;
+    } catch (error) {
+        console.log("Error while reading data from ble device: ", error);
+        return null;
+    }
+  }
+
+  const get_cpu_graph_data = async () => {
+    await resetOffset_graph();
+    const labels: string[] = [];
+    const values: number[] = [];
+
+
+    let line_data = null;
+    while (true) {
+      const response = await readCharacteristic(serviceUUID, '00000209-710e-4a5b-8d75-3e5b444bc3cf')
+
+      line_data = base64.decode(response!.value!)
+      if (line_data === "EOF") {
+        break;
+      }
+
+      const data_parts = line_data.split(',');
+      console.log(data_parts[0]);
+      console.log(data_parts[1]);
+      if (data_parts[1] != undefined) {
+        labels.push(data_parts[0].substring(0, 6).replace(/"/g, ''));
+        values.push(parseFloat(data_parts[1]));
+      }
+    }
+
+    // console.log(values)
+    set_video_chartData({ labels, datasets: [{ data: values, strokeWidth: 2 }] });
+  }
+
+  // ------------------------------------------------------------------- //
   
 
   const handleFetchVideoFile = async () => {
@@ -390,6 +452,15 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
           <TouchableOpacity style={styles.Button} onPress={handlePicture}>
             <Text style={styles.ButtonText}>Take Picture</Text>
           </TouchableOpacity>
+        </View>
+
+
+        <View style={styles.graphSection}>
+        <View style={styles.graphContainer}>
+          <LineGraph
+            chartData={video_chartData}
+          />
+        </View>
         </View>
       </View>
 
@@ -497,6 +568,18 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontSize: 24,
     color: '#fff',
+  },
+
+  graphContainer: {
+    flex: 1,
+    width: '100%',
+    overflow: 'hidden',
+    alignSelf: 'center',
+  },
+  graphSection: {
+    flex: 1,
+    width: '100%',
+    marginBottom: 20,
   },
 });
   

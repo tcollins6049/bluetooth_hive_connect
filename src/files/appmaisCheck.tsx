@@ -50,7 +50,6 @@ const isDuringAppmais = async (deviceId: string): Promise<boolean> => {
       
     }
     
-    // console.log("FALSE")
     return true;
 }
 
