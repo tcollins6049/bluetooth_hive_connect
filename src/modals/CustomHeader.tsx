@@ -1,24 +1,45 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import manager from '../files/BLEManagerSingleton';
-// import disconnectBleManager from '../utils/disconnectBleManager';
 import { StackNavigationProp } from '@react-navigation/stack';
+
+import manager from '../files/BLEManagerSingleton';
+
 
 interface CustomHeaderProps {
     title: string;
 }
 
 
-
+/**
+ * Responsible for displaying a title and disconect button.
+ * The disconnect button is able to disconnect from all connect devices and return the user to the DeviceList screen.
+ * 
+ * @param {string}  title   Title of the screen we are on
+ *  
+ * @returns {JSX.Element}   Displays a header containing a title and disconnect button.
+ */
 const CustomHeader: React.FC<CustomHeaderProps> = ({ title }) => {
+    // Used for navigating to DeviceList screen upon disconnecting
     const navigation = useNavigation<StackNavigationProp<any>>();
 
+
+    /**
+     * Called when the "Disconnect" button is pressed.
+     * Disconnects the BleManager and navigates to the DeviceList screen.
+     * 
+     */
     const handleDisconnect = async () => {
         await disconnectBleManager();
         navigation.navigate('DeviceList'); // Navigate to the first screen or any other screen
     };
 
+
+    /**
+     * Header for the application. 
+     * Displays the page title on the left and a disconnect button on the right
+     * 
+     */
     return (
         <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
@@ -30,6 +51,10 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({ title }) => {
 };
 
 
+/**
+ * Disconnects from all connected devices.
+ * 
+ */
 const disconnectBleManager = async () => {
     try {
         // Disconnect from all connected devices
@@ -38,13 +63,12 @@ const disconnectBleManager = async () => {
             await manager.cancelDeviceConnection(device.id);
         });
 
-        // Clean up BLE Manager
-        // manager.destroy();
         console.log("BLE Manager disconnected and cleaned up.");
     } catch (error) {
         console.error("Error disconnecting BLE Manager:", error);
     }
 };
+
 
 const styles = StyleSheet.create({
     header: {

@@ -1,9 +1,10 @@
-
+// Interface for devices. Each device is composed of a name and id
 export interface DeviceInterface {
     id: string;
     name: string;
 }
-  
+
+// List of registered devices.
 const devices: DeviceInterface[] = [
     { id: 'E4:5F:01:5F:AF:73', name: 'rpi4-60' },
     { id: 'D8:3A:DD:75:8C:25', name: 'rpi4-30' },

@@ -1,7 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button, Modal, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
+import { 
+    View, 
+    Text, 
+    StyleSheet, 
+    Modal, 
+    ActivityIndicator, 
+    FlatList, 
+    TouchableOpacity 
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+
 import { DeviceInterface } from '../files/devices';
+
 
 interface ScanningModalProps {
     visible: boolean;
@@ -10,6 +20,19 @@ interface ScanningModalProps {
     onRequestClose: () => void;
 }
 
+
+/**
+ * Modal showing a scanning icon, when a device is found, it shows up within the scan list.
+ * If the user presses a device in this list, the application will attempt to connect to that device.
+ * If the close button is pressed then scanning is stopped and the modal is closed.
+ * 
+ * @param   {boolean}   visible Determines if the modal is visible or not
+ * @param   {DeviceInterface[]} foundDevices    Array of found devices [deviceId, deviceName] 
+ * @param   {}  onDevicePress   Function determining what happens when a device is pressed.
+ * @param   {}  onRequestClose  Function determing what happens when close is pressed.
+ * 
+ * @returns {JSX.Element}   Displays a scanning screen with a list of found devices.
+ */
 const ScanningModal: React.FC<ScanningModalProps> = ({ visible, foundDevices, onDevicePress, onRequestClose }) => {
     return (
         <Modal
@@ -20,8 +43,11 @@ const ScanningModal: React.FC<ScanningModalProps> = ({ visible, foundDevices, on
         >
             <View style={styles.modalBackground}>
                 <View style={styles.modalContainer}>
+                    {/* Loading icon and scan text */}
                     <ActivityIndicator size="large" color="#0000ff" />
                     <Text style={styles.text}>Scanning for devices...</Text>
+
+                    {/* List of found devices */}
                     <FlatList
                         data={foundDevices}
                         keyExtractor={item => item.id.toString()}
@@ -34,6 +60,8 @@ const ScanningModal: React.FC<ScanningModalProps> = ({ visible, foundDevices, on
                             </TouchableOpacity>
                         )}
                     />
+
+                    {/* Stop Scan Button */}
                     <TouchableOpacity style={styles.stopScanButton} onPress={onRequestClose}>
                         <LinearGradient
                             colors={['#4c669f', '#3b5998', '#192f6a']}
@@ -42,11 +70,13 @@ const ScanningModal: React.FC<ScanningModalProps> = ({ visible, foundDevices, on
                             <Text style={styles.stopScanButtonText}>Stop Scan</Text>
                         </LinearGradient>
                     </TouchableOpacity>
+
                 </View>
             </View>
         </Modal>
     );
 };
+
 
 const styles = StyleSheet.create({
     modalBackground: {

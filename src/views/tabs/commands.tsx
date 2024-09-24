@@ -9,14 +9,33 @@ import {
   Modal,
   TouchableOpacity,
 } from 'react-native';
-import manager from '../../files/BLEManagerSingleton';
 import base64 from 'react-native-base64';
 
+import manager from '../../files/BLEManagerSingleton';
+import isDuringAppmais from '../../files/appmaisCheck';
+import AppTimingModal from '../../modals/AppTimingModal';
+
+
+/**
+ * Screen containing area for command entry along with a list of quick commands.
+ * Use these to run commands on the connected Raspberry Pi.
+ * 
+ * @param {string}  deviceId  id of the connected device
+ * @param {string}  deviceName  name of the connected device
+ * 
+ * @returns {JSX.Element} Renders text box for command entry along with list of quick commands.
+ */
 const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
+  // Service UUID and Command charcteristic UUID
+  const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
+  const COMMAND_UUID = "00000023-710e-4a5b-8d75-3e5b444bc3cf";
+
   const [error, setError] = useState<string | null>(null);
   const [command, setCommand] = useState<string>('');
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [timing_modalVisible, set_timing_modalVisible] = useState(false);
 
+  // List of quick commands that will be displayed.
   const quickCommands = [
     { label: 'sudo systemctl start appmais', value: 'sudo systemctl start appmais' },
     { label: 'sudo systemctl stop appmais', value: 'sudo systemctl stop appmais' },
@@ -24,38 +43,34 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
     // Add more commands as needed
   ];
 
+
+  /**
+   * Send user entered command to be run on the Raspberry Pi.
+   * 
+   * @param {string}  commandToSend   Command from user contained in the text box.
+   */
   const sendCommand = async (commandToSend: string) => {
     try {
-      // Ensure the device is connected
-      const connectedDevices = await manager.connectedDevices(['00000001-710e-4a5b-8d75-3e5b444bc3cf']);
-      const isConnected = connectedDevices.some(device => device.id === deviceId);
-
-      if (!isConnected) {
-        console.error('Device is not connected.');
-        try {
-          // Attempt to reconnect to the device
-          const device = await manager.connectToDevice(deviceId);
-          console.log('Reconnected to device:', device.name);
-        } catch (reconnectError) {
-          console.error('Error reconnecting to device:', reconnectError);
-          setError('Failed to reconnect to device.');
-          return;
-        }
-      }
-
       // Encode the command to base64
       const encodedCommand = base64.encode(commandToSend);
 
-      // Write the command to the characteristic
-      await manager.writeCharacteristicWithResponseForDevice(
-        deviceId,
-        '00000001-710e-4a5b-8d75-3e5b444bc3cf',
-        '00000023-710e-4a5b-8d75-3e5b444bc3cf', // Use the correct characteristic UUID
-        encodedCommand
-      );
+      // If appmais isn't currently recording, write the command to the Pi.
+      if (!(await isDuringAppmais(deviceId))) {
+        // Write the command to the characteristic
+        await manager.writeCharacteristicWithResponseForDevice(
+          deviceId,
+          SERVICE_UUID,
+          COMMAND_UUID, // Use the correct characteristic UUID
+          encodedCommand
+        );
 
-      console.log('Command sent successfully.');
-      Alert.alert('Success', 'Command sent successfully.');
+        console.log('Command sent successfully.');
+        Alert.alert('Success', 'Command sent successfully.');
+      } else {
+        // Appmais process is currently running, display modal telling user to wait a bit and then try again.
+        console.log("Cannot send command yet as the appmais process is running");
+        set_timing_modalVisible(true);
+      }
     } catch (writeError) {
       console.error('Error sending command:', writeError);
 
@@ -78,23 +93,47 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
     }
   };
 
+
+  /**
+   * Called when the Send Command button is pressed. Shows the Are you sure? modal.
+   * 
+   */
   const sendCurrentCommand = () => {
     setIsModalVisible(true);
   };
 
+
+  /**
+   * Called after pressing "Yes" within the Are you sure? modal.
+   * Sets the modal visibility to false and sends the user's entered command.
+   * 
+   */
   const confirmSendCommand = async () => {
     setIsModalVisible(false);
     await sendCommand(command);
     setCommand("");
   };
 
-  const sendQuickCommand = (command: string) => {
+
+  /**
+   * Called after pressing one of the quick commands. Sets the command text within the text box to this quick command.
+   * 
+   * @param {string}  command   The user's entered command
+   */
+  const setQuickCommand = (command: string) => {
     setCommand(command);
   };
 
+
+  /**
+   * Renders a text box for command entry and a clear button.
+   * Also shows a list of quick commands along with a Send Command button.
+   * 
+   */
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header: Displays title, device id, and device name */}
         <View style={styles.header}>
           <Text style={styles.title}>Commands</Text>
           <Text>Device ID: {deviceId}</Text>
@@ -102,14 +141,7 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
           <View style={styles.horizontalLine} />
         </View>
 
-        {/*<View style={styles.textboxContainer}>
-          <TextInput
-            style={styles.input}
-            onChangeText={setCommand}
-            value={command}
-            placeholder="Type your command here..."
-          />
-        </View>*/}
+        {/* Command entry text box */}
         <View style={styles.textboxContainer}>
           <View style={styles.inputRow}>
             <TextInput
@@ -124,18 +156,18 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
           </View>
         </View>
 
+        {/* Quick commands title and list */}
         <Text style={styles.quickCommandsTitle}>Quick Commands</Text>
-
-
         {quickCommands.map((item, index) => (
           <View key={index} style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => sendQuickCommand(item.value)}>
+            <TouchableOpacity style={styles.button} onPress={() => setQuickCommand(item.value)}>
               <Text style={styles.buttonText}>{item.label}</Text>
             </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
 
+      {/* Footer: Contains the Send Command button */}
       <View style={styles.footer}>
         {/*<Button title="Send Command" onPress={sendCurrentCommand} />*/}
         <TouchableOpacity style={styles.sendButton} onPress={sendCurrentCommand}>
@@ -145,6 +177,7 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
 
       {error && <Text style={styles.errorText}>Error: {error}</Text>}
 
+      {/* Are you sure? Modal */}
       <Modal
         transparent={true}
         animationType="slide"
@@ -165,9 +198,16 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
           </View>
         </View>
       </Modal>
+
+      {/* AppMAIS process modal */}
+      <AppTimingModal
+        isVisible={timing_modalVisible}
+        onClose={() => set_timing_modalVisible(false)}
+      />
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   header: {
@@ -196,16 +236,10 @@ const styles = StyleSheet.create({
   horizontalLine: {
     borderBottomColor: 'black',
     borderBottomWidth: 1,
-    width: '100%', // Adjust the width as needed
-    marginVertical: 10, // Adjust the vertical margin as needed
+    width: '100%',
+    marginVertical: 10,
   },
   input: {
-    /*height: 40,
-    width: '80%',
-    borderColor: 'gray',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    marginBottom: 20,*/
     flex: 1,
     borderColor: 'gray',
     borderWidth: 1,

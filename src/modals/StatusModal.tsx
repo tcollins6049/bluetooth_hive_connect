@@ -1,11 +1,28 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Modal, ModalProps } from 'react-native';
+import { 
+  View, 
+  Text, 
+  Button, 
+  StyleSheet, 
+  Modal, 
+  ModalProps 
+} from 'react-native';
+
 
 interface StatusModalProps extends ModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
+
+/**
+ * 
+ * 
+ * @param {boolean} visible Determines if the modal is visible or not
+ * @param {}        onClose Determines what happens when the close button is pressed 
+ * 
+ * @returns {JSX.Element}
+ */
 const StatusModal: React.FC<StatusModalProps> = ({ visible, onClose }) => {
   return (
     <Modal
@@ -23,6 +40,7 @@ const StatusModal: React.FC<StatusModalProps> = ({ visible, onClose }) => {
     </Modal>
   );
 };
+
 
 const styles = StyleSheet.create({
   modalContainer: {

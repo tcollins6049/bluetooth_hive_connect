@@ -1,65 +1,51 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Alert,
-  Platform,
-  PermissionsAndroid,
   Image,
   TouchableOpacity,
   ScrollView
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
-import manager from '../../files/BLEManagerSingleton';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
+
+import manager from '../../files/BLEManagerSingleton';
 import isDuringAppmais from '../../files/appmaisCheck';
 
 
+/**
+ * 
+ * @param {string}  deviceId  ID of connected device.
+ * @param {string}  deviceName  name of connected device.
+ * 
+ * @returns {JSX.Element} Renders most recent audio file information.
+ */
 const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
-  const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-  const audioFileInfoUUID = '00000201-710e-4a5b-8d75-3e5b444bc3cf';
-  const videoFileInfoUUID = '00000202-710e-4a5b-8d75-3e5b444bc3cf';
+  const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+  const AUDIO_FILE_INFO_UUID = '00000201-710e-4a5b-8d75-3e5b444bc3cf';
 
-  const videoCharacteristicUUID = '00000203-710e-4a5b-8d75-3e5b444bc3cf';
-  const audioCharacteristicUUID = '00000205-710e-4a5b-8d75-3e5b444bc3cf';
-  const FresetCharacteristicUUID = '00000204-710e-4a5b-8d75-3e5b444bc3cf';
+  const AUDIO_UUID = '00000205-710e-4a5b-8d75-3e5b444bc3cf';
+  const FRESET_UUID = '00000204-710e-4a5b-8d75-3e5b444bc3cf';
 
   const [wavImagePath, setWavImagePath] = useState('');
-  const [videoImagePath, setVideoImagePath] = useState('');
 
   const [audioFileSize, setAudioFileSize] = useState<string>('No File Found');
   const [mp3FileSize, setMp3FileSize] = useState<string>("No File Found");
   const [rms_level, set_rms_level] = useState<string>("No File Found");
   const [silence, setSilence] = useState<string>("No File Found");
   const [audioDate, setAudioDate] = useState<string>("No File Found");
-  const [videoFileSize, setVideoFileSize] = useState<string>("No File Found");
-  const [videoDate, setVideoDate] = useState<string>("No File Found");
 
-  const [errors, setErrors] = useState<{ audio: boolean, video: boolean, audioText: string | null, videoText: string | null }>({
-    audio: false,
-    video: false,
-    audioText: null,
-    videoText: null,
-  });
-
-  
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      requestExternalStoragePermission();
-    }
-  }, []);
   
   useFocusEffect(
     useCallback(() => {
 
       const initial = async () => {
         // Fetch the file when the tab is focused
-        await readFileInfoCharacteristic(serviceUUID, audioFileInfoUUID, 'audio');
-
-        await readFileInfoCharacteristic(serviceUUID, videoFileInfoUUID, 'video');
+        await readFileInfoCharacteristic(SERVICE_UUID, AUDIO_FILE_INFO_UUID);
 
         isDuringAppmais(deviceId);
       }
@@ -67,33 +53,6 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       initial();
     }, [])
   );
-  
-
-  /**
-   * This method requests permission from the device to access storage.
-   * // Probably needs to be moved to a different file //
-   */
-  const requestExternalStoragePermission = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-          title: "Storage Permission",
-          message: "This app needs access to your storage to save files",
-          buttonNeutral: "Ask Me Later",
-          buttonNegative: "Cancel",
-          buttonPositive: "OK"
-        }
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("You can use the storage");
-      } else {
-        console.log("Storage permission denied");
-      }
-    } catch (err) {
-      console.warn(err);
-    }
-  };
 
 
   /**
@@ -103,7 +62,7 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
    * 
    * This method is responsible for reading the characteristic which gets the file size of the most recent audio or video file.
    */
-  const readFileInfoCharacteristic = async (serviceUUID: string, characteristicUUID: string, fileVariable: string) => {
+  const readFileInfoCharacteristic = async (serviceUUID: string, characteristicUUID: string) => {
     try {
       // Read characteristics for the deviceId and wait for completion
       const readData = await manager.readCharacteristicForDevice(deviceId, serviceUUID, characteristicUUID);
@@ -114,7 +73,7 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       if (base64Value) {
         // Decode the base64 encoded value
         let decodedValue = base64.decode(base64Value);
-        if (fileVariable === 'audio') {
+        if (true) {
           const decoded_fileSize = decodedValue.split(', ')[1]
           const decoded_filePath = decodedValue.split(', ')[0]
           const decoded_mp3_size = decodedValue.split(', ')[2]
@@ -126,12 +85,6 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
           setSilence(decodedValue.split(', ')[4]);
           console.log("HHHHHHHHHHHHHHHHH", decoded_fileSize, decoded_mp3_size);
           console.log("UUUUUUUUUUUUUU", mp3FileSize);
-        } else if (fileVariable === 'video') {
-          const decoded_fileSize = decodedValue.split(', ')[1]
-          const decoded_filePath = decodedValue.split(', ')[0]
-
-          setVideoDate(extractCreationDate(decoded_filePath))
-          formatFileSize(decoded_fileSize, setVideoFileSize)
         }
         console.log("The value: ", decodedValue);
       }
@@ -198,7 +151,7 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
    * This method is responsible for reading a single chunk of a data from a file on the Raspberry Pi.
    * This is a part of the file transfer process. 512 bytes will be read at a time.
    */
-  const getChunk = async (serviceUUID: string, characteristicUUID: string): Promise<Buffer | null> => {
+  /*const getChunk = async (serviceUUID: string, characteristicUUID: string): Promise<Buffer | null> => {
     try {
 
       const data = await manager.readCharacteristicForDevice(
@@ -220,14 +173,14 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       console.log('Error requesting chunk from GATT server:', error);
       return null; // Return an empty array in case of error
     }
-  }
+  }*/
 
 
   /**
    * This method calls a characteristic on the GATT server which resets the offset within the file transfer characteristic.
    * The offset is used to determine what chunk we are reading.
    */
-  const resetOffset = async (serviceUUID: string, resetCharacteristicUUID: string) => {
+  /*const resetOffset = async (serviceUUID: string, resetCharacteristicUUID: string) => {
     try {
         await manager.writeCharacteristicWithResponseForDevice(
             deviceId,
@@ -240,14 +193,15 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
     } catch (error) {
         console.log('Error resetting offset on GATT server:', error);
     }
-  };
+  };*/
 
 
   /**
    * This is like the main method for the file transfer process.
    * This method loops through each chunk of file data, pulls the chunk of data from the pi, and then concatenates them and sends them to saveToFile()
+   * 
    */
-  const fetchFile = async (serviceUUID: string, characteristicUUID: string, resetCharacteristicUUID: string, file_name: string, setImagePath: React.Dispatch<React.SetStateAction<string>>) => {
+  /*const fetchFile = async (serviceUUID: string, characteristicUUID: string, resetCharacteristicUUID: string, file_name: string, setImagePath: React.Dispatch<React.SetStateAction<string>>) => {
     await resetOffset(serviceUUID, resetCharacteristicUUID);
 
     let combinedData = Buffer.alloc(0); // Initialize an empty buffer
@@ -277,7 +231,7 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
     } catch (error) {
       console.log("Error occured in fetchFile: ", error);
     }
-  }
+  }*/
 
 
   /**
@@ -285,7 +239,7 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
    * 
    * This method takes all chunks sent from the pi and saves them to a .jpg file on the phone.
    */
-  const saveToFile = async (data: Buffer, file_name: string, setImagePath: React.Dispatch<React.SetStateAction<string>>) => {
+  /*const saveToFile = async (data: Buffer, file_name: string, setImagePath: React.Dispatch<React.SetStateAction<string>>) => {
     const path = RNFS.ExternalDirectoryPath + '/' + file_name;
 
     try {
@@ -297,25 +251,16 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
     } catch (error) {
         console.error('Error saving file:', error);
     }
-  }
-  
-
-  const handleFetchVideoFile = async () => {
-    try {
-        await fetchFile(serviceUUID, videoCharacteristicUUID, FresetCharacteristicUUID, 'video_frame.jpg', setVideoImagePath);
-    } catch (error) {
-        console.log('Error fetching file:', error);
-    }
-  };
+  }*/
 
 
-  const handleFetchWaveformFile = async () => {
+  /*const handleFetchWaveformFile = async () => {
     try{
-      await fetchFile(serviceUUID, audioCharacteristicUUID, FresetCharacteristicUUID, 'audio_waveform.jpg', setWavImagePath);
+      await fetchFile(SERVICE_UUID, AUDIO_UUID, FRESET_UUID, 'audio_waveform.jpg', setWavImagePath);
     } catch (error) {
       console.log("Error fetching file:", error);
     }
-  }
+  }*/
 
 
   return (
@@ -323,10 +268,10 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       <ScrollView contentContainerStyle={styles.scrollContainer}>
       {/* Header */}
       <View style={styles.headContainer}>
-        <Text style={styles.title}>Mic and Camera</Text>
+        <Text style={styles.title}>Microphone</Text>
         <Text>Device Name: {deviceName || 'Unknown Device'}</Text>
         <Text style={styles.instructions}>
-          Below, you can view information collected from the microphone and camera from the Raspberry Pi.
+          Below, you can view information collected from the microphone from the Raspberry Pi.
         </Text>
       </View>
 
@@ -343,31 +288,9 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
         ) : (
           <Text></Text>
         )}
-        <TouchableOpacity style={styles.Button} onPress={handleFetchWaveformFile}>
+        {/*<TouchableOpacity style={styles.Button} onPress={handleFetchWaveformFile}>
           <Text style={styles.ButtonText}>Get Audio Waveform</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Video Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Video</Text>
-        <Text>File size: {videoFileSize}</Text>
-        <Text>Creation Date: {videoDate}</Text>
-        {videoImagePath ? (
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: 'file://' + videoImagePath }} style={styles.image} resizeMode="contain" />
-          </View>
-        ) : (
-          <Text></Text>
-        )}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.Button} onPress={handleFetchVideoFile}>
-            <Text style={styles.ButtonText}>Download Frame</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.Button} onPress={() => {}}>
-            <Text style={styles.ButtonText}>Take Picture</Text>
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>*/}
       </View>
 
       </ScrollView>

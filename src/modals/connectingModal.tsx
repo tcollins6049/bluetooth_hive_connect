@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button, Modal, ActivityIndicator } from 'react-native';
+import { 
+    View, 
+    Text, 
+    StyleSheet, 
+    Button, 
+    Modal, 
+    ActivityIndicator 
+} from 'react-native';
+
 
 interface ConnectingModalProps {
     visible: boolean;
@@ -7,6 +15,17 @@ interface ConnectingModalProps {
     onCancel: () => void;
 }
 
+
+/**
+ * Modal used while device connection is being attempted.
+ * Shows a loading icon
+ * 
+ * @param {boolean} visible Determines if the modal is visible
+ * @param {string}  deviceName  Name of connected device
+ * @param {void}    onCancel    Function to control what happens when the cancel button is pressed on the modal.
+ * 
+ * @returns {JSX.Element}   Displays a loading icon along with a cancel connection button.
+ */
 const ConnectingModal: React.FC<ConnectingModalProps> = ({ visible, deviceName, onCancel }) => {
     return (
         <Modal
@@ -26,6 +45,7 @@ const ConnectingModal: React.FC<ConnectingModalProps> = ({ visible, deviceName, 
         </Modal>
     );
 };
+
 
 const styles = StyleSheet.create({
     modalBackground: {

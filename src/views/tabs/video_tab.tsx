@@ -1,99 +1,79 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Alert,
-  Platform,
-  PermissionsAndroid,
   Image,
   TouchableOpacity,
   ScrollView
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
-import manager from '../../files/BLEManagerSingleton';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
+
+import manager from '../../files/BLEManagerSingleton';
 import isDuringAppmais from '../../files/appmaisCheck';
-
 import LineGraph from '../../modals/Line_graph';
+import AppTimingModal from '../../modals/AppTimingModal';
 
 
+/**
+ * Renders most recent video file basic info from Pi.
+ * Also renders entropy graph and provides functionality for extracting a video frame or taking a picture using Pi camera.
+ * 
+ * @param {string}  deviceId  id of connected device
+ * @param {string}  deviceName  name of connected device
+ * 
+ * @returns {JSX.Element} Screen displaying basic video info and entropy graph.
+ */
 const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
-  const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-  const videoFileInfoUUID = '00000202-710e-4a5b-8d75-3e5b444bc3cf';
-  const videoCharacteristicUUID = '00000203-710e-4a5b-8d75-3e5b444bc3cf';
-  const FresetCharacteristicUUID = '00000204-710e-4a5b-8d75-3e5b444bc3cf';
-  const staticCharacteristicUUID = '00000207-710e-4a5b-8d75-3e5b444bc3cf';
-  const SresetCharacteristicUUID = '00000208-710e-4a5b-8d75-3e5b444bc3cf';
+  // Service UUID and UUID's for characteristics used on this screen.
+  const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+  const VIDEO_FILE_INFO_UUID = '00000202-710e-4a5b-8d75-3e5b444bc3cf';
+  const VIDEO_UUID = '00000203-710e-4a5b-8d75-3e5b444bc3cf';
+  const FRESET_UUID = '00000204-710e-4a5b-8d75-3e5b444bc3cf';
+  const STATIC_UUID = '00000207-710e-4a5b-8d75-3e5b444bc3cf';
+  const SRESET_UUID = '00000208-710e-4a5b-8d75-3e5b444bc3cf';
+  const COMMAND_UUID = '00000023-710e-4a5b-8d75-3e5b444bc3cf';
+  const VIDEO_LINE_UUID = '00000209-710e-4a5b-8d75-3e5b444bc3cf';
 
-  const [videoImagePath, setVideoImagePath] = useState('');
+  const [videoImagePath, setVideoImagePath] = useState(''); // Holds the path of the extracted frame
+  const [pictureImagePath, setPictureImagePath] = useState(''); // Holds the path of picture after it is taken
 
+  // useState for basic video info (file size and date)
   const [videoFileSize, setVideoFileSize] = useState<string>("No File Found");
   const [videoDate, setVideoDate] = useState<string>("No File Found");
 
+  // Used to set visibility of images
   const [showImagePopup, setShowImagePopup] = useState(false);
-  const [popupImageUrl, setPopupImageUrl] = useState('');
+  const [showPicturePopup, setShowPicturePopup] = useState(false);
 
-  
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      requestExternalStoragePermission();
-    }
-  }, []);
-  
+  const [timing_modalVisible, set_timing_modalVisible] = useState(false); // Sets visibility of timing modal.
+
+
+  // On focus, get basic file info and graph info.
   useFocusEffect(
     useCallback(() => {
 
       const initial = async () => {
         // Fetch the file when the tab is focused
-        await readFileInfoCharacteristic(serviceUUID, videoFileInfoUUID, 'video');
+        await readFileInfoCharacteristic(SERVICE_UUID, VIDEO_FILE_INFO_UUID);
         await get_cpu_graph_data();
-
-        isDuringAppmais(deviceId);
       }
 
       initial();
     }, [])
   );
-  
-
-  /**
-   * This method requests permission from the device to access storage.
-   * // Probably needs to be moved to a different file //
-   */
-  const requestExternalStoragePermission = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-          title: "Storage Permission",
-          message: "This app needs access to your storage to save files",
-          buttonNeutral: "Ask Me Later",
-          buttonNegative: "Cancel",
-          buttonPositive: "OK"
-        }
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("You can use the storage");
-      } else {
-        console.log("Storage permission denied");
-      }
-    } catch (err) {
-      console.warn(err);
-    }
-  };
 
 
   /**
-   * @param serviceUUID -- UUID of the service which the characteristic is a part of
-   * @param characteristicUUID -- UUID of the characteristic we are reading
-   * @param fileVariable -- This will be either 'audio' or 'video'
+   * This function is used to read a characteristic providing basic file info such as the creation date and file size.
    * 
-   * This method is responsible for reading the characteristic which gets the file size of the most recent audio or video file.
+   * @param {string}  serviceUUID The service UUID
+   * @param {string}  characteristicUUID  UUID for the characteristic being read
    */
-  const readFileInfoCharacteristic = async (serviceUUID: string, characteristicUUID: string, fileVariable: string) => {
+  const readFileInfoCharacteristic = async (serviceUUID: string, characteristicUUID: string) => {
     try {
       // Read characteristics for the deviceId and wait for completion
       const readData = await manager.readCharacteristicForDevice(deviceId, serviceUUID, characteristicUUID);
@@ -102,16 +82,14 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       let base64Value = readData.value;
   
       if (base64Value) {
-        // Decode the base64 encoded value
+        // Decode value
         let decodedValue = base64.decode(base64Value);
-        if (fileVariable === 'video') {
-          const decoded_fileSize = decodedValue.split(', ')[1]
-          const decoded_filePath = decodedValue.split(', ')[0]
-
-          setVideoDate(extractCreationDate(decoded_filePath))
-          formatFileSize(decoded_fileSize, setVideoFileSize)
-        }
-        console.log("The value: ", decodedValue);
+        
+        // Extract date and file size
+        const decoded_fileSize = decodedValue.split(', ')[1]
+        const decoded_filePath = decodedValue.split(', ')[0]
+        setVideoDate(extractCreationDate(decoded_filePath))
+        formatFileSize(decoded_fileSize)
       }
     } catch (error) {
       // Log any errors that occur during the read operation.
@@ -120,6 +98,14 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   }
 
 
+  /**
+   * The file path passed in will look like this: "/2024-06-13/rpi4-60@2024-06-13@14-40-00.h264"
+   * This function extracts the time and date from that path and returns them as a string.
+   * 
+   * @param {string}  filePath Path of file we are extracting creation date from
+   * 
+   * @returns {string}  Creation date if successful, otherwise "No Match Found"
+   */
   const extractCreationDate = (filePath: string): string => {
     const pattern = /@(\d{4}-\d{2}-\d{2})@(\d{2}-\d{2}-\d{2})\./;
     const match = filePath.match(pattern);
@@ -149,7 +135,13 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   }
 
 
-  const formatFileSize = (currSize: string, setSize: React.Dispatch<React.SetStateAction<string>>) => {
+  /**
+   * The characteristic we read returns the file size in bytes.
+   * In this method we convert the file size from bytes to its largest, best formatted size.
+   * 
+   * @param {string}  currSize  Size read from the characteristic in bytes
+   */
+  const formatFileSize = (currSize: string) => {
     const match = currSize.match(/(\d+)/);
     const bytes = match ? parseInt(match[0], 10) : 0;
     
@@ -158,59 +150,63 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
     const gigabytes = bytes / (1024 ** 3);
   
     if (gigabytes >= 1) {
-      setSize(`${gigabytes.toFixed(2)} GB`);
+      setVideoFileSize(`${gigabytes.toFixed(2)} GB`);
     } else if (megabytes >= 1) {
-      setSize(`${megabytes.toFixed(2)} MB`);
+      setVideoFileSize(`${megabytes.toFixed(2)} MB`);
     } else if (kilobytes >= 1) {
-      setSize(`${kilobytes.toFixed(2)} KB`);
+      setVideoFileSize(`${kilobytes.toFixed(2)} KB`);
     } else {
-      setSize(`${bytes} bytes`);
+      setVideoFileSize(`${bytes} bytes`);
     }
   };
 
 
   // ---------------- Methods in this section are responsible for sending command for taking picture -------------------- //
+  /**
+   * Called when the "Take Picture" button is pressed.
+   * Sends a command to the Pi to make it take a picture, then retrieves this picture from the Pi.
+   * 
+   */
   const handlePicture = async () => {
     try {
-        await sendCommand('libcamera-still -o picture.jpg') // Take picture
-        await fetchFile(serviceUUID, staticCharacteristicUUID, SresetCharacteristicUUID, 'video_frame.jpg', setVideoImagePath); // Fetch picture
-        setShowImagePopup(true);
+      // If the AppMAIS process is not currently running.
+      if (!(await isDuringAppmais(deviceId))) {
+        // Send command to Pi to take picture
+        await sendCommand('libcamera-still -q 10 -o picture.jpg')
+
+        // Get picture from Pi.
+        await fetchFile(SERVICE_UUID, STATIC_UUID, SRESET_UUID, 'hive_picture.jpg', setPictureImagePath);
+        setShowPicturePopup(true);
+      } else {
+        // AppMAIS process is running, show modal telling user to wait and try again.
+        console.log("Couldn't take picture, appmais process is running")
+        set_timing_modalVisible(true);
+      }
     } catch (error) {
         console.log('Error fetching file:', error);
     }
   };
 
 
+  /**
+   * Sends the given command to be run on the Pi.
+   * 
+   * @param {string}  commandToSend Command to send to Pi
+   */
   const sendCommand = async (commandToSend: string) => {
     try {
-      // Ensure the device is connected
-      const connectedDevices = await manager.connectedDevices(['00000001-710e-4a5b-8d75-3e5b444bc3cf']);
-      const isConnected = connectedDevices.some(device => device.id === deviceId);
-
-      if (!isConnected) {
-        console.error('Device is not connected.');
-        try {
-          // Attempt to reconnect to the device
-          const device = await manager.connectToDevice(deviceId);
-          console.log('Reconnected to device:', device.name);
-        } catch (reconnectError) {
-          console.log('Error reconnecting to device:', reconnectError);
-        }
-      }
-
       // Encode the command to base64
       const encodedCommand = base64.encode(commandToSend);
 
       // Write the command to the characteristic
       await manager.writeCharacteristicWithResponseForDevice(
         deviceId,
-        '00000001-710e-4a5b-8d75-3e5b444bc3cf',
-        '00000023-710e-4a5b-8d75-3e5b444bc3cf', // Use the correct characteristic UUID
+        SERVICE_UUID,
+        COMMAND_UUID,
         encodedCommand
       );
 
       console.log('Command sent successfully.');
-      // Alert.alert('Success', 'Command sent successfully.');
     } catch (writeError) {
       console.log('Error sending command:', writeError);
 
@@ -221,28 +217,28 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
         // If error message matches 'Operation was rejected' but command was executed, treat it as success
         if (writeError instanceof Error && writeError.message.includes('Operation was rejected')) {
           console.log('Operation was rejected error ignored.');
-          // Alert.alert('Success', 'Command sent successfully (despite the rejection).');
         } else {
           errorMessage = writeError.message;
         }
       }
-
-      // Alert.alert('Error', 'Command couldn\'t be sent, please try again.');
-      // throw writeError;
     }
   };
 
 
   // ---------------- Parts below here correspond to file transfers and don't need to be touched. ----------------------- //
+
   /**
-   * @returns -- A 512 byte chunk of data from a file
-   * 
    * This method is responsible for reading a single chunk of a data from a file on the Raspberry Pi.
    * This is a part of the file transfer process. 512 bytes will be read at a time.
+   * 
+   * @param {string}  serviceUUID The service UUID
+   * @param {string}  characteristicUUID  UUID of the characteristic being read.
+   * 
+   * @returns {Buffer | null} A 512 byte chunk of data from a file
    */
   const getChunk = async (serviceUUID: string, characteristicUUID: string): Promise<Buffer | null> => {
     try {
-
+      // Read chunk of data from file.
       const data = await manager.readCharacteristicForDevice(
         deviceId,
         serviceUUID,
@@ -253,7 +249,6 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       if (data.value !== null) {
         const decodedData = Buffer.from(data.value, 'base64'); // Assuming data.value is base64 encoded
   
-        // console.log(decodedData);
         return decodedData;
       }
 
@@ -268,17 +263,20 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   /**
    * This method calls a characteristic on the GATT server which resets the offset within the file transfer characteristic.
    * The offset is used to determine what chunk we are reading.
+   * 
+   * @param {string}  serviceUUID The service UUID
+   * @param {string}  resetCharacteristicUUID UUID for resetting the file offset
    */
   const resetOffset = async (serviceUUID: string, resetCharacteristicUUID: string) => {
     try {
-        await manager.writeCharacteristicWithResponseForDevice(
-            deviceId,
-            serviceUUID,
-            resetCharacteristicUUID,
-            base64.encode('reset')
-        );
+      await manager.writeCharacteristicWithResponseForDevice(
+        deviceId,
+        serviceUUID,
+        resetCharacteristicUUID,
+        base64.encode('reset')
+      );
 
-        console.log('Offset reset command sent');
+      console.log('Offset reset command sent');
     } catch (error) {
         console.log('Error resetting offset on GATT server:', error);
     }
@@ -286,23 +284,30 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
 
 
   /**
-   * This is like the main method for the file transfer process.
+   * The main method for the file transfer process
    * This method loops through each chunk of file data, pulls the chunk of data from the pi, and then concatenates them and sends them to saveToFile()
+   * 
+   * @param {string}  serviceUUID The service UUID
+   * @param {string}  characteristicUUID  The UUID of the characteristic being read (all chunks have the same UUID)
+   * @param {string}  resetCharacteristicUUID The UUID of the offset reset characteristic.
+   * @param {string}  file_name Name to save the resulting file under
+   * @param {React.Dispatch<React.SetStateAction<string>>}  setImagePath  The variable to store the final image path in
    */
   const fetchFile = async (serviceUUID: string, characteristicUUID: string, resetCharacteristicUUID: string, file_name: string, setImagePath: React.Dispatch<React.SetStateAction<string>>) => {
+    // Reset offset to ensure we are starting at beginning of file.
     await resetOffset(serviceUUID, resetCharacteristicUUID);
 
     let combinedData = Buffer.alloc(0); // Initialize an empty buffer
     let hasMoreChunks = true;
-
     try {
+      // While there are more chunks to be read
       while (hasMoreChunks) {
-        const chunk = await getChunk(serviceUUID, characteristicUUID);
+        const chunk = await getChunk(serviceUUID, characteristicUUID);  // Read chunk of data
           
         if (chunk !== null) {
-          // console.log(base64.decode(String(chunk)));
-          combinedData = Buffer.concat([combinedData, chunk]);
+          combinedData = Buffer.concat([combinedData, chunk]);  // Add chunk to combined data
 
+          // If recieved chunk's size is les than 512 then we have reached the end of the file, therefore we are finished.
           const chunkSize = chunk.length;
           const expectedSize = 512;
           if (chunkSize < expectedSize) {
@@ -314,7 +319,7 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
         }
       }
 
-      // console.log("ALL CHUNKS: ", allChunks)
+      // Save combined chunks to file.
       await saveToFile(combinedData, file_name, setImagePath);
     } catch (error) {
       console.log("Error occured in fetchFile: ", error);
@@ -323,18 +328,19 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
 
 
   /**
-   * @param data -- The combined chunks of data
+   * Takes the combined chunks from Pi and saves them to a file
    * 
-   * This method takes all chunks sent from the pi and saves them to a .jpg file on the phone.
+   * @param {Buffer}  data  Combined chunks of data
+   * @param {string}  file_name Name to save the resulting file under
+   * @param {React.Dispatch<React.SetStateAction<string>>}  setImagePath  The variable to store the final image path in
    */
   const saveToFile = async (data: Buffer, file_name: string, setImagePath: React.Dispatch<React.SetStateAction<string>>) => {
     const path = RNFS.ExternalDirectoryPath + '/' + file_name;
 
     try {
-        // Write the buffer data to the file directly
-        await RNFS.writeFile(path, data.toString('base64'), 'base64');
+        await RNFS.writeFile(path, data.toString('base64'), 'base64');  // Write the buffer data to the file directly
+
         console.log(`File saved to: ${path}`);
-        // Alert.alert('File downloaded', `File saved to ${path}`);
         setImagePath(path);
     } catch (error) {
         console.error('Error saving file:', error);
@@ -343,23 +349,37 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
 
 
   // --------------------------- Entropy Graph ----------------------- //
-  const [video_chartData, set_video_chartData] = useState<any>(null);
 
+  const [video_chartData, set_video_chartData] = useState<any>(null); // useState to hold chart data
+
+  /**
+   * Resets the offset of reading the video file sizes csv file.
+   * 
+   */
   const resetOffset_graph = async () => {
     try {
-        await manager.writeCharacteristicWithResponseForDevice(
-            deviceId,
-            serviceUUID,
-            '00000210-710e-4a5b-8d75-3e5b444bc3cf',
-            base64.encode('reset')
-        );
+      await manager.writeCharacteristicWithResponseForDevice(
+        deviceId,
+        SERVICE_UUID,
+        '00000210-710e-4a5b-8d75-3e5b444bc3cf',
+        base64.encode('reset')
+      );
 
-        console.log('Offset reset command sent');
+      console.log('Offset reset command sent');
     } catch (error) {
-        console.log('Error resetting offset on GATT server:', error);
+      console.log('Error resetting offset on GATT server:', error);
     }
   };
 
+
+  /**
+   * Reads data from passed in characteristic
+   * 
+   * @param {string}  serviceUUID   The service UUID
+   * @param {string}  characteristicUUID  UUID of the characteristic we are reading
+   * 
+   * @returns Data read from characteristic
+   */
   const readCharacteristic = async (serviceUUID: string, characteristicUUID: string) => {
     try {
         const readData = await manager.readCharacteristicForDevice(deviceId, serviceUUID, characteristicUUID);
@@ -370,101 +390,143 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
     }
   }
 
+
+  /**
+   * Read each line of file on Pi containing video file sizes.
+   * Keep track of dates for labels and sizes for values.
+   * Add these to the chart data to be points on the graph.
+   * 
+   */
   const get_cpu_graph_data = async () => {
-    await resetOffset_graph();
-    const labels: string[] = [];
-    const values: number[] = [];
+    await resetOffset_graph();  // Reset offset ensuring we start at beginning of file
+    const labels: string[] = [];  // Array for holding point labels
+    const values: number[] = [];  // Array for holding point values
 
 
     let line_data = null;
     while (true) {
-      const response = await readCharacteristic(serviceUUID, '00000209-710e-4a5b-8d75-3e5b444bc3cf')
+      const response = await readCharacteristic(SERVICE_UUID, VIDEO_LINE_UUID) // Read line from file
 
+      // Decode line, if line is "EOF", we have reached the end of the file and are finished.
       line_data = base64.decode(response!.value!)
       if (line_data === "EOF") {
         break;
       }
 
+      // Split data into pieces. (parts[0] = date/label, parts[1] = file size/value)
       const data_parts = line_data.split(',');
       console.log(data_parts[0]);
       console.log(data_parts[1]);
+
+      // Push results onto label and value arrays
       if (data_parts[1] != undefined) {
         labels.push(data_parts[0].substring(0, 6).replace(/"/g, ''));
-        values.push(parseFloat(data_parts[1]));
+        let value = parseFloat(data_parts[1]) / (1024 ** 2)
+        values.push(value);
       }
     }
 
-    // console.log(values)
-    set_video_chartData({ labels, datasets: [{ data: values, strokeWidth: 2 }] });
+    set_video_chartData({ labels: labels, datasets: [{ data: values, strokeWidth: 2 }] });  // Add label and value array data to the chartData
   }
 
   // ------------------------------------------------------------------- //
   
-
+  /**
+   * Called when "Get Frame" is pressed.
+   * Gets a video frame from the Pi and displays it on screen.
+   * 
+   */
   const handleFetchVideoFile = async () => {
     try {
-        await fetchFile(serviceUUID, videoCharacteristicUUID, FresetCharacteristicUUID, 'video_frame.jpg', setVideoImagePath);
-        setPopupImageUrl(videoImagePath); // Set the URI for the popup image
+      // If the AppMAIS process is not currently running
+      if (!(await isDuringAppmais(deviceId))) {
+        // Get extracted video frame from Pi.
+        await fetchFile(SERVICE_UUID, VIDEO_UUID, FRESET_UUID, 'video_frame.jpg', setVideoImagePath);
         setShowImagePopup(true);
+      } else {
+        // AppMAIS process is running, tells user to wait and try again.
+        console.log("Cannot extract frame, the appmais process is running");
+        set_timing_modalVisible(true);
+      }
     } catch (error) {
-        console.log('Error fetching file:', error);
+      console.log('Error fetching file:', error);
     }
   };
 
 
+  /**
+   * Displays the most recent video files basic data (date and file size)
+   * Displays a line graph based around video file sizes.
+   * Displays two buttons, "Get Frame" retrives a frame from the most recent recording on the PI
+   *  "Take Picture" uses the camera attached to the Pi to take a picture.
+   * 
+   */
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {/* Header */}
-      <View style={styles.headContainer}>
-        <Text style={styles.title}>Mic and Camera</Text>
-        <Text>Device Name: {deviceName || 'Unknown Device'}</Text>
-        <Text style={styles.instructions}>
-          Below, you can view information collected from the microphone and camera from the Raspberry Pi.
-        </Text>
-      </View>
+        {/* Header */}
+        <View style={styles.headContainer}>
+          <Text style={styles.title}>Camera</Text>
+          <Text>Device Name: {deviceName || 'Unknown Device'}</Text>
+          <Text style={styles.instructions}>
+            'Download Frame' - Pulls a frame from the most recent recording.
+          </Text>
+          <Text style={styles.instructions}>
+            'Take Picture' - Used camera connected to Pi to take a picture.
+          </Text>
+        </View>
 
-      {/* Video Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Video</Text>
-        <Text>File size: {videoFileSize}</Text>
-        <Text>Creation Date: {videoDate}</Text>
-        {/*{videoImagePath ? (
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: 'file://' + videoImagePath }} style={styles.image} resizeMode="contain" />
-          </View>
-        ) : (
-          <Text></Text>
-        )}*/}
-        {/* New image rendering testing */}
-        {showImagePopup && (
-            <View style={styles.popupContainer}>
-                <TouchableOpacity style={styles.closeButton} onPress={() => setShowImagePopup(false)}>
-                    <Text style={styles.closeButtonText}>X</Text>
-                </TouchableOpacity>
-                <Image source={{ uri: 'file://' + videoImagePath }} style={styles.popupImage} resizeMode="contain" />
+        {/* Video Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Video</Text>
+          <Text>File size: {videoFileSize}</Text>
+          <Text>Creation Date: {videoDate}</Text>
+          
+          {/* Shows extracted frame or taken picure */}
+          {showImagePopup && (
+              <View style={styles.popupContainer}>
+                  <TouchableOpacity style={styles.closeButton} onPress={() => setShowImagePopup(false)}>
+                      <Text style={styles.closeButtonText}>X</Text>
+                  </TouchableOpacity>
+                  <Image source={{ uri: 'file://' + videoImagePath }} style={styles.popupImage} resizeMode="contain" />
+              </View>
+          )}
+          {showPicturePopup && (
+              <View style={styles.popupContainer}>
+                  <TouchableOpacity style={styles.closeButton} onPress={() => setShowPicturePopup(false)}>
+                      <Text style={styles.closeButtonText}>X</Text>
+                  </TouchableOpacity>
+                  <Image source={{ uri: 'file://' + pictureImagePath }} style={styles.popupImage} resizeMode="contain" />
+              </View>
+          )}
+
+          {/* Displays graph */}
+          <View style={styles.graphSection}>
+            <View style={styles.graphContainer}>
+              <LineGraph
+                chartData={video_chartData}
+                color_code={'#47786a'}
+              />
             </View>
-        )}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.Button} onPress={handleFetchVideoFile}>
-            <Text style={styles.ButtonText}>Download Frame</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.Button} onPress={handlePicture}>
-            <Text style={styles.ButtonText}>Take Picture</Text>
-          </TouchableOpacity>
-        </View>
+          </View>
 
-
-        <View style={styles.graphSection}>
-        <View style={styles.graphContainer}>
-          <LineGraph
-            chartData={video_chartData}
-          />
+          {/* Footer: Get Frame and Take Picture buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.Button} onPress={handleFetchVideoFile}>
+              <Text style={styles.ButtonText}>Download Frame</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.Button} onPress={handlePicture}>
+              <Text style={styles.ButtonText}>Take Picture</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        </View>
-      </View>
-
       </ScrollView>
+
+      {/* AppMAIS timing modal */}
+      <AppTimingModal
+        isVisible={timing_modalVisible}
+        onClose={() => set_timing_modalVisible(false)}
+      />
     </View>
   )
 };

@@ -1,4 +1,3 @@
-// Import necessary modules from React and React Native
 import React, { useEffect, useState, useCallback } from 'react';
 import { 
     Modal, 
@@ -12,29 +11,31 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
-// Instantiate a Bluetooth manager
+
 import manager from '../../files/BLEManagerSingleton';
 
 
 /**
- * FirstTab Component
- * @param {Object} props - Properties passed to the component
- * @param {string} props.deviceId - The ID of the BLE device
- * @param {string} props.deviceName - The name of the BLE device
- * @returns {JSX.Element} - Rendered component
+ * Code to display a list of variables within the connected Pi's config file. We can access and change there values here.
+ * 
+ * @param {string} props.deviceId The ID of the connected BLE device
+ * @param {string} props.deviceName The name of the connected BLE device
+ * 
+ * @returns {JSX.Element} Screen containing entries for each variable within the config file. Also contains a submit and refresh button.
  */
 const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
-  const servUUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
-  const start_time_UUID = '00000101-710e-4a5b-8d75-3e5b444bc3cf';
-  const end_time_UUID = '00000102-710e-4a5b-8d75-3e5b444bc3cf';
-  const duration_UUID = '00000103-710e-4a5b-8d75-3e5b444bc3cf';
-  const interval_UUID = '00000104-710e-4a5b-8d75-3e5b444bc3cf';
-  const v_start_time_UUID = '00000105-710e-4a5b-8d75-3e5b444bc3cf';
-  const v_end_time_UUID = '00000106-710e-4a5b-8d75-3e5b444bc3cf';
-  const v_duration_UUID = '00000107-710e-4a5b-8d75-3e5b444bc3cf';
-  const v_interval_UUID = '00000108-710e-4a5b-8d75-3e5b444bc3cf';
+  // The service UUID and UUID's for all characteristics accessed in this file.
+  const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
+  const START_TIME_UUID = '00000101-710e-4a5b-8d75-3e5b444bc3cf';
+  const END_TIME_UUID = '00000102-710e-4a5b-8d75-3e5b444bc3cf';
+  const DURATION_UUID = '00000103-710e-4a5b-8d75-3e5b444bc3cf';
+  const INTERVAL_UUID = '00000104-710e-4a5b-8d75-3e5b444bc3cf';
+  const VIDEO_START_TIME_UUID = '00000105-710e-4a5b-8d75-3e5b444bc3cf';
+  const VIDEO_END_TIME_UUID = '00000106-710e-4a5b-8d75-3e5b444bc3cf';
+  const VIDEO_DURATION_UUID = '00000107-710e-4a5b-8d75-3e5b444bc3cf';
+  const VIDEO_INTERVAL_UUID = '00000108-710e-4a5b-8d75-3e5b444bc3cf';
 
-  // Define the type for Variables, so we can access and change our variable values.
+  // Define variables for each value we are accessing in the config file.
   type VariablesType = {
     capture_window_start_time: string;
     capture_window_end_time: string;
@@ -45,11 +46,6 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
     v_capture_window_end_time: string;
     v_capture_duration_seconds: string;
     v_capture_interval_seconds: string;
-    [key: string]: string; // This is the index signature
-  };
-
-  // Define the type for ChangedVariables, so we can access changedVariables and modify values.
-  type ChangedVariables = {
     [key: string]: string;
   };
 
@@ -65,22 +61,31 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
     v_capture_interval_seconds: ''
   });
 
+  // Type used to keep track of variables that have been changed.
+  type ChangedVariables = {
+    [key: string]: string;
+  };
+  // Initialize state to keep track of changed variables.
+  const [changedVariables, setChangedVariables] = useState<ChangedVariables>({});
+
   // Initialize state used to keep track of the original variable values in order to detect changes.
   const [originalVariables, setOriginalVariables] = useState({ ...variables });
   
   // Initialize state to manage model visibility. This is the model showing the Are You Sure? Screen.
   const [modalVisible, setModalVisible] = useState(false);
-  
-  // Initialize state to keep track of changed variables.
-  const [changedVariables, setChangedVariables] = useState<ChangedVariables>({});
 
 
-  // useEffect hook to fetch data from characteristics once this tab opens.
+  /**
+   * hook which runs once the tab is opened. Calls fetchData() to get current variable values from config file.
+   */
   useEffect(() => {
     fetchData();
   }, []);
 
-  // useFocusEffect hook to fetch data whenever the tab is focused.
+
+  /**
+   * Runs when this tab is focused. Reruns fetchData() to get variable values again.
+   */
   useFocusEffect(
     useCallback(() => {
       fetchData();
@@ -89,29 +94,27 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
 
 
   /**
- * Generic function to read a characteristic from a BLE device.
- * @param {string} serviceUUID - UUID of the BLE service.
- * @param {string} characteristicUUID - UUID of the BLE characteristic.
- * @param {string} variableName - The name of the variable to update.
- */
+  * Generic function to read value from Characteristic on the Raspberry Pi. 
+  * 
+  * @param {string} serviceUUID UUID for the service the characteristic is under.
+  * @param {string} characteristicUUID UUID of the BLE characteristic.
+  * @param {string} variableName The name of the variable to update.
+  */
   const readCharacteristic = async (serviceUUID: string, characteristicUUID: string, variableName: string) => {
     try {
-      // Read characteristics for the deviceId and wait for completion
+      // read data from given BLE characteristic.
       const readData = await manager.readCharacteristicForDevice(deviceId, serviceUUID, characteristicUUID);
-      console.log("Data read from the ble device: ", readData);
+      // console.log("Data read from the ble device: ", readData); // Uncomment to print readData to console.
   
-      // Extract the base64 encoded value from the read data
-      let base64Value = readData.value;
-      console.log("Base64 value: ", base64Value);
+      let base64Value = readData.value; // Extract base64 encoded value from readData
   
       if (base64Value) {
         // Decode the base64 encoded value
         let decodedValue = base64.decode(base64Value);
-        console.log("Decoded value: ", decodedValue);
+        // console.log("Decoded value: ", decodedValue);  // Uncomment to print read decoded value to console.
   
-        // Trim whitespace from decoded value
+        // read value will look like "capt_window_start = 0800", this extracts the "0800"
         let trimmedValue = decodedValue.trim();
-
         const match = trimmedValue.match(/^\D*(\d+)\D*/);
         if (match) trimmedValue = match[1];
 
@@ -133,39 +136,23 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
     }
   }
 
+
   /**
- * Generic function to write a characteristic to a BLE device.
- * @param {string} serviceUUID - UUID of the BLE service.
- * @param {string} characteristicUUID - UUID of the BLE characteristic.
- * @param {string} variableName - The name of the variable to write.
- */
+   * Generic function to write a given value using a characteristic on the Rasberry Pi.
+   * 
+   * @param {string} serviceUUID UUID of the BLE service.
+   * @param {string} characteristicUUID UUID of the BLE characteristic.
+   * @param {string} variableName The name of the variable to write.
+   */
   const writeCharacteristic = async (serviceUUID: string, characteristicUUID: string, variableName: string) => {
     try {
-      // Check if the device is still connected
-      const connectedDevices = await manager.connectedDevices([serviceUUID]);
-      const isConnected = connectedDevices.some(device => device.id === deviceId);
-  
-      if (!isConnected) {
-        console.error('Device is not connected.');
-        try {
-            // Attempt to reconnect to the device
-            const device = await manager.connectToDevice(deviceId);
-            console.log('Reconnected to device:', device.name);
-        } catch (error) {
-            console.error('Error reconnecting to device:', error);
-            return; // Exit the function if reconnection fails
-        }
-      }
-  
       // Write the updated variables to the characteristic
       if (deviceId) {
         // convert the variable value to a JSON string
         let variablesJSON = JSON.stringify((variables as {[key: string]: any})[variableName]);
-        console.log("VARRRRR: ", variablesJSON);
 
         // Values end up looking like: "1200", this trims off the quotation marks.
         let trimmed = variablesJSON.replace(/"/g, '');
-        console.log(trimmed);
 
         // Encode the trimmed value to base64
         let valueBase64 = base64.encode(trimmed);
@@ -182,40 +169,28 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
 
   /**
    * Handles the change of a variable's value in the state.
-   * @param {string} variableName - The name of the variable to update.
-   * @param {string} value - The new value to set for the variable.
+   * 
+   * @param {string} variableName The name of the variable to update.
+   * @param {string} value The new value to set for the variable.
    */
-    const handleVariableChange = (variableName: string, value: string) => {
-      // Update the state with new value for specified variable.
-      setVariables(prevVariables => ({
-          ...prevVariables,
-          [variableName]: value
-      }));
-    };
+  const handleVariableChange = (variableName: string, value: string) => {
+    // Update the state with new value for specified variable.
+    setVariables(prevVariables => ({
+      ...prevVariables,
+      [variableName]: value
+    }));
+  };
+
 
   /**
- * Handles the submission of changes to the BLE device.
- */
+   * Called when the Submit button is pressed.
+   * Checks if any variables have been changed from there original values. If not then nothing happens.
+   * If variables have been changed from there original values, the changedVariables array is updated accordingly.
+   * Also, the Are you sure? modal is displayed.
+   * 
+   */
   const handleSubmit = async () => {
-    const serviceUUID = servUUID;
-    
     try {
-      // Check if the device is still connected
-      const connectedDevices = await manager.connectedDevices([serviceUUID]);
-      const isConnected = connectedDevices.some(device => device.id === deviceId);
-
-      if (!isConnected) {
-        console.error('Device is not connected.');
-        try {
-            // Attempt to reconnect to the device
-            const device = await manager.connectToDevice(deviceId);
-            console.log('Reconnected to device:', device.name);
-        } catch (error) {
-            console.error('Error reconnecting to device:', error);
-            return; // Exit the function if reconnection fails.
-        }
-      }
-
       // Detect changes between current variables and original variables, update changedVariables
       let changes: {[key: string]: string} = {};
       for (let variable in variables) {
@@ -228,187 +203,171 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
       if (Object.keys(changes).length > 0) {
         setChangedVariables(changes);
         setModalVisible(true);
-      } else {
-        // If there are no changes, just submit
-        submitChanges();
       }
     } catch (error) {
       console.error("Error updating variables:", error);
     }
   };
 
+
   /**
    * Submits the changes to the BLE device by writing to the appropriate characteristics.
+   * Only performs a write if that variable was changed.
+   * 
    */
-    const submitChanges = () => {
-      // The following variables modify values for all sensors other than video
-      // capture_window_start_time: Write to device if it has been changed.
-      if (variables.capture_window_start_time !== originalVariables.capture_window_start_time) {
-        writeCharacteristic(servUUID, start_time_UUID, 'capture_window_start_time');
-      }
-      // capture_window_end_time: Write to device if it has been changed.
-      if (variables.capture_window_end_time !== originalVariables.capture_window_end_time) {
-        writeCharacteristic(servUUID, end_time_UUID, 'capture_window_end_time');
-      }
-      // capture_duration_seconds: Write to device if it has been changed.
-      if (variables.capture_duration_seconds !== originalVariables.capture_duration_seconds) {
-        writeCharacteristic(servUUID, duration_UUID, 'capture_duration_seconds');
-      }
-      // capture_interval_seconds: Write to device if it has been changed.
-      if (variables.capture_interval_seconds !== originalVariables.capture_interval_seconds) {
-        writeCharacteristic(servUUID, interval_UUID, 'capture_interval_seconds');
-      }
-
-      // The following variables modify values only for video
-      // capture_interval_seconds: Write to device if it has been changed.
-      if (variables.v_capture_window_start_time !== originalVariables.v_capture_window_start_time) {
-        writeCharacteristic(servUUID, v_start_time_UUID, 'v_capture_window_start_time');
-      }
-      // capture_interval_seconds: Write to device if it has been changed.
-      if (variables.v_capture_window_end_time !== originalVariables.v_capture_window_end_time) {
-        writeCharacteristic(servUUID, v_end_time_UUID, 'v_capture_window_end_time');
-      }
-      // capture_interval_seconds: Write to device if it has been changed.
-      if (variables.v_capture_duration_seconds !== originalVariables.v_capture_duration_seconds) {
-        writeCharacteristic(servUUID, v_duration_UUID, 'v_capture_duration_seconds');
-      }
-      // capture_interval_seconds: Write to device if it has been changed.
-      if (variables.v_capture_interval_seconds !== originalVariables.v_capture_interval_seconds) {
-        writeCharacteristic(servUUID, v_interval_UUID, 'v_capture_interval_seconds');
-      }
-
-      console.log("Variables updated successfully.");
-
-      fetchData();
+  const submitChanges = () => {
+    if (variables.capture_window_start_time !== originalVariables.capture_window_start_time) {  // capture_window_start_time
+      writeCharacteristic(SERVICE_UUID, START_TIME_UUID, 'capture_window_start_time');
+    }
+    if (variables.capture_window_end_time !== originalVariables.capture_window_end_time) {  // capture_window_end_time
+      writeCharacteristic(SERVICE_UUID, END_TIME_UUID, 'capture_window_end_time');
+    }
+    if (variables.capture_duration_seconds !== originalVariables.capture_duration_seconds) {  // capture_duration_seconds
+      writeCharacteristic(SERVICE_UUID, DURATION_UUID, 'capture_duration_seconds');
+    }
+    if (variables.capture_interval_seconds !== originalVariables.capture_interval_seconds) {  // capture_interval_seconds
+      writeCharacteristic(SERVICE_UUID, INTERVAL_UUID, 'capture_interval_seconds');
     }
 
+    if (variables.v_capture_window_start_time !== originalVariables.v_capture_window_start_time) {  // capture_interval_seconds
+      writeCharacteristic(SERVICE_UUID, VIDEO_START_TIME_UUID, 'v_capture_window_start_time');
+    }
+    if (variables.v_capture_window_end_time !== originalVariables.v_capture_window_end_time) {  // capture_interval_seconds
+      writeCharacteristic(SERVICE_UUID, VIDEO_END_TIME_UUID, 'v_capture_window_end_time');
+    }
+    if (variables.v_capture_duration_seconds !== originalVariables.v_capture_duration_seconds) {  // capture_interval_seconds
+      writeCharacteristic(SERVICE_UUID, VIDEO_DURATION_UUID, 'v_capture_duration_seconds');
+    }
+    if (variables.v_capture_interval_seconds !== originalVariables.v_capture_interval_seconds) {  // capture_interval_seconds
+      writeCharacteristic(SERVICE_UUID, VIDEO_INTERVAL_UUID, 'v_capture_interval_seconds');
+    }
+
+    console.log("Variables updated successfully.");
+
+    fetchData();
+  }
+
+
   /**
- * Function to fetch data from all characteristics.
- */
+   * Calls readCharacteristic for all config variables. 
+   * 
+   */
   const fetchData = async () => {
     // The following variables are for every sensor besides video
-    // Read for capture_window_start_time
-    await readCharacteristic(servUUID, start_time_UUID, 'capture_window_start_time');
-    
-    // Read for capture_window_end_time              
-    await readCharacteristic(servUUID, end_time_UUID, 'capture_window_end_time');
+    await readCharacteristic(SERVICE_UUID, START_TIME_UUID, 'capture_window_start_time'); // Read for capture_window_start_time             
+    await readCharacteristic(SERVICE_UUID, END_TIME_UUID, 'capture_window_end_time'); // Read for capture_window_end_time 
+    await readCharacteristic(SERVICE_UUID, DURATION_UUID, 'capture_duration_seconds');  // Read for capture_duration_seconds
+    await readCharacteristic(SERVICE_UUID, INTERVAL_UUID, 'capture_interval_seconds');  // Read for capture_interval_seconds
 
-    // Read for capture_duration_seconds
-    await readCharacteristic(servUUID, duration_UUID, 'capture_duration_seconds');
-                          
-    // Read for capture_interval_seconds
-    await readCharacteristic(servUUID, interval_UUID, 'capture_interval_seconds');
-
-    // The following variables are only for video
-    // Read for capture_window_start_time
-    await readCharacteristic(servUUID, v_start_time_UUID, 'v_capture_window_start_time');
-    
-    // Read for capture_window_end_time              
-    await readCharacteristic(servUUID, v_end_time_UUID, 'v_capture_window_end_time');
-
-    // Read for capture_duration_seconds
-    await readCharacteristic(servUUID, v_duration_UUID, 'v_capture_duration_seconds');
-                          
-    // Read for capture_interval_seconds
-    await readCharacteristic(servUUID, v_interval_UUID, 'v_capture_interval_seconds');
+    // The following variables are only for video 
+    await readCharacteristic(SERVICE_UUID, VIDEO_START_TIME_UUID, 'v_capture_window_start_time'); // Read for capture_window_start_time             
+    await readCharacteristic(SERVICE_UUID, VIDEO_END_TIME_UUID, 'v_capture_window_end_time'); // Read for capture_window_end_time 
+    await readCharacteristic(SERVICE_UUID, VIDEO_DURATION_UUID, 'v_capture_duration_seconds');  // Read for capture_duration_seconds
+    await readCharacteristic(SERVICE_UUID, VIDEO_INTERVAL_UUID, 'v_capture_interval_seconds');  // Read for capture_interval_seconds
   };
 
 
+  /**
+   * The return for this screen, renders each config file variable in a list.
+   * Each variable shows a text box conataining the current value.
+   * Variables can be edited within the text box and by pressing submit.
+   * 
+   */
   return (
     <View style={styles.container}>
-        {/* Header */}
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.headContainer}>
-            <Text style={styles.title}>Basic Data</Text>
-            <Text>Device ID: {deviceId}</Text>
-            <Text>Device Name: {deviceName || 'Unknown Device'}</Text>
-            <Text style={styles.instructions}>
-              Below, you can modify the variables in the Pi configuration file to customize their values.
-            </Text>
-          </View>
-
-        {/* Main Content */}
-        
-            {/* Add some space between device info and the variables */}
-            <View style={{ height: 20 }} />
-
-            {/* All Other Sensors Section */}
-            <Text style={styles.sectionTitle}>All Other Sensors</Text>
-            {Object.keys(variables).filter(variableName => !variableName.startsWith('v_')).map((variableName) => (
-                <View key={variableName} style={styles.variableContainer}>
-                    <Text>{variableName}:</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={variables[variableName as keyof typeof variables]}
-                        onChangeText={(text) => handleVariableChange(variableName, text)}
-                    />
-                </View>
-            ))}
-
-            {/* Video Section */}
-            <Text style={styles.sectionTitle}>Video</Text>
-            {Object.keys(variables).filter(variableName => variableName.startsWith('v_')).map((variableName) => (
-                <View key={variableName} style={styles.variableContainer}>
-                    <Text>{variableName}:</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={variables[variableName as keyof typeof variables]}
-                        onChangeText={(text) => handleVariableChange(variableName, text)}
-                    />
-                </View>
-            ))}
-        </ScrollView>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity style={[styles.submitButton, { marginRight: 10 }]} onPress={handleSubmit}>
-                    <Text style={styles.submitButtonText}>Submit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.submitButton} onPress={fetchData}>
-                    <Text style={styles.submitButtonText}>Refresh</Text>
-                </TouchableOpacity>
-            </View>
+      {/* Header */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.headContainer}>
+          <Text style={styles.title}>Basic Data</Text>
+          <Text>Device ID: {deviceId}</Text>
+          <Text>Device Name: {deviceName || 'Unknown Device'}</Text>
+          <Text style={styles.instructions}>
+            Below, you can modify the variables in the Pi configuration file to customize their values.
+          </Text>
         </View>
 
-        {/* Confirmation Modal */}
-        <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={() => {
+        {/* Main Content */}
+          
+        {/* Add some space between device info and the variables */}
+        <View style={{ height: 20 }} />
+
+        {/* All Other Sensors Section */}
+        <Text style={styles.sectionTitle}>All Other Sensors</Text>
+        {Object.keys(variables).filter(variableName => !variableName.startsWith('v_')).map((variableName) => (
+          <View key={variableName} style={styles.variableContainer}>
+            <Text>{variableName}:</Text>
+            <TextInput
+              style={styles.input}
+              value={variables[variableName as keyof typeof variables]}
+              onChangeText={(text) => handleVariableChange(variableName, text)}
+            />
+          </View>
+        ))}
+
+        {/* Video Section */}
+        <Text style={styles.sectionTitle}>Video</Text>
+        {Object.keys(variables).filter(variableName => variableName.startsWith('v_')).map((variableName) => (
+          <View key={variableName} style={styles.variableContainer}>
+            <Text>{variableName}:</Text>
+            <TextInput
+              style={styles.input}
+              value={variables[variableName as keyof typeof variables]}
+              onChangeText={(text) => handleVariableChange(variableName, text)}
+            />
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={[styles.submitButton, { marginRight: 10 }]} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.submitButton} onPress={fetchData}>
+            <Text style={styles.submitButtonText}>Refresh</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Confirmation Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Are you sure you want to make the following changes?</Text>
+            {Object.keys(changedVariables).map((variableName) => (
+              <Text key={variableName}>{variableName}: {changedVariables[variableName]}</Text>
+            ))}
+            {/* Confirmation Buttons */}
+            <Pressable
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => {
                 setModalVisible(!modalVisible);
-            }}
-        >
-            <View style={styles.centeredView}>
-                <View style={styles.modalView}>
-                    <Text style={styles.modalText}>Are you sure you want to make the following changes?</Text>
-                    {Object.keys(changedVariables).map((variableName) => (
-                        <Text key={variableName}>{variableName}: {changedVariables[variableName]}</Text>
-                    ))}
-                    {/* Confirmation Buttons */}
-                    <Pressable
-                        style={[styles.button, styles.buttonClose]}
-                        onPress={() => {
-                            setModalVisible(!modalVisible);
-                            submitChanges();
-                        }}
-                    >
-                        <Text style={styles.textStyle}>Yes</Text>
-                    </Pressable>
-                    <Pressable
-                        style={[styles.button, styles.buttonClose]}
-                        onPress={() => {
-                            setModalVisible(!modalVisible);
-                        }}
-                    >
-                        <Text style={styles.textStyle}>No</Text>
-                    </Pressable>
-                </View>
-            </View>
-        </Modal>
+                submitChanges();
+              }}
+            >
+              <Text style={styles.textStyle}>Yes</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => {
+                setModalVisible(!modalVisible);
+              }}
+            >
+              <Text style={styles.textStyle}>No</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
-);
+  );
 }
   
 
@@ -550,8 +509,5 @@ const styles = StyleSheet.create({
       marginHorizontal: 10,
   },
 });
-
-
-
 
 export default ModificationsTab;

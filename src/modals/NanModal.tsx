@@ -1,23 +1,61 @@
 import React from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import { 
+    View, 
+    Text, 
+    Modal, 
+    StyleSheet, 
+    TouchableOpacity, 
+    Dimensions, 
+    ScrollView 
+} from 'react-native';
+import { DataTable } from 'react-native-paper';
+
 
 interface InfoModalProps {
   isVisible: boolean;
   data: string[];
   values: string[];
+  interpolated_indeces: number[];
   onClose: () => void;
 }
 
-const InfoModal: React.FC<InfoModalProps> = ({ isVisible, data, values, onClose }) => {
-    // Function to determine the dot color based on the value
-    const getDotColor = (value: string) => {
+
+/**
+ * Modal contains labels on the left side of the screen with there corresponding values on the right.
+ * Displays the time of recording along with the value that was recorded.
+ * Also displays a red or green dot giving a visual indication if a nan value was recorded or not.
+ * Displays failure and nan count at the top. Failure count is how many times 3 or more nan values were recorded in a row.
+ * 
+ * 
+ * @param {boolean} isVisible   Determines if the modal is visible or not
+ * @param {string[]}    data    Graph labels (times)
+ * @param {string[]}    values  Graph point values
+ * 
+ * @returns {JSX.Element}   Modal containing a list of labels and corresponding values.
+ */
+const InfoModal: React.FC<InfoModalProps> = ({ isVisible, data, values, interpolated_indeces, onClose }) => {
+    /**
+     * Used to determine the dot color based on the value.
+     * If nan: red, else: green.
+     * 
+     * @param {string}  value   Value of the point a color is being assigned to.
+     * 
+     * @returns Assigned color, either red or green.
+     */
+    const getDotColor = (value: string, index: number) => {
         console.log('Value received:', value); // Debugging log
         const normalizedValue = value.toLowerCase().trim(); // Normalize input
+
+        for (let i = 0; i < interpolated_indeces.length; i++) {
+            if (interpolated_indeces[i] == index) {
+                return 'yellow';
+            }
+        }
         return normalizedValue === 'nan' ? 'red' : 'green';
     };
-    
 
-    return (
+
+    return ( 
         <View>
             <Modal
                 visible={isVisible}
@@ -27,20 +65,27 @@ const InfoModal: React.FC<InfoModalProps> = ({ isVisible, data, values, onClose 
             >
                 <View style={styles.overlay}>
                     <View style={styles.modalContainer}>
-                        <Text style={styles.title}>Information</Text>
-                        {data.length > 0 ? (
+                        <DataTable style={styles.container}> 
+                            {/* Table Header */}
+                            <DataTable.Header style={styles.tableHeader}> 
+                                <DataTable.Title>   </DataTable.Title> 
+                                <DataTable.Title>Time</DataTable.Title> 
+                                <DataTable.Title>Value</DataTable.Title> 
+                            </DataTable.Header> 
+
+                            {/* Table Contents [dot, label, value] */}
                             <ScrollView contentContainerStyle={styles.listContainer}>
                                 {data.map((item, index) => (
-                                    <View key={index} style={styles.listItemContainer}>
-                                        <View style={[styles.dot, { backgroundColor: getDotColor(values[index]) }]} />
-                                        <Text style={styles.listItem}>{item}      {values[index]}</Text>
-                                        {/*<Text style={styles.listItemRight}>{values[index]}</Text>*/}
-                                    </View>
+                                    <DataTable.Row key={index}> 
+                                        <DataTable.Cell><View style={[styles.dot, { backgroundColor: getDotColor(values[index], index) }]} /></DataTable.Cell> 
+                                        <DataTable.Cell>{ data[index] }</DataTable.Cell> 
+                                        <DataTable.Cell>{ values[index] }</DataTable.Cell> 
+                                    </DataTable.Row> 
                                 ))}
                             </ScrollView>
-                        ) : (
-                            <Text style={styles.listItem}>No nan values</Text>
-                        )}
+
+                        </DataTable>
+                        {/* Close Button */}
                         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                             <Text style={styles.closeButtonText}>Close</Text>
                         </TouchableOpacity>
@@ -48,8 +93,9 @@ const InfoModal: React.FC<InfoModalProps> = ({ isVisible, data, values, onClose 
                 </View>
             </Modal>
         </View>
-    );
+      ); 
 };
+
 
 const styles = StyleSheet.create({
     overlay: {
@@ -60,7 +106,7 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         width: Dimensions.get('window').width * 0.8,
-        maxHeight: Dimensions.get('window').height * 0.6, // Adjusted height
+        maxHeight: Dimensions.get('window').height * 0.7, // Adjusted height
         padding: 20,
         backgroundColor: '#fff',
         borderRadius: 10,
@@ -83,7 +129,6 @@ const styles = StyleSheet.create({
     },
     listItem: {
         fontSize: 16,
-        // marginVertical: 5,
         textAlign: 'left',
         marginLeft: 10,
     },
@@ -103,10 +148,17 @@ const styles = StyleSheet.create({
         width: 12,
         height: 12,
         borderRadius: 6,
-        // backgroundColor: 'green',
-        marginRight: 10, // Add some space between the dot and the text
+        marginRight: 10,
         marginTop: -10,
     },
+
+
+    container: { 
+        padding: 15, 
+    }, 
+    tableHeader: { 
+        backgroundColor: '#DCDCDC', 
+    }, 
 });
 
 export default InfoModal;

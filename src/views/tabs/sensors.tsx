@@ -1,4 +1,3 @@
-// Import necessary modules from React and React Native
 import React, { useState, useCallback } from 'react';
 import {  
     Modal, 
@@ -6,29 +5,33 @@ import {
     View, 
     Text, 
     StyleSheet,
-    TouchableOpacity
+    TouchableOpacity,
+    ScrollView
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
-// Instantiate a Bluetooth manager
+
 import manager from '../../files/BLEManagerSingleton';
 
 
 /**
- * FourthTab Component
- * @param {Object} props - Properties passed to the component
- * @param {string} props.deviceId - The ID of the BLE device
- * @param {string} props.deviceName - The name of the BLE device
- * @returns {JSX.Element} - Rendered component
+ * A screen containing a list of sensors along with on/off buttons. Here you can select which sensors you want enabled or disabled.
+ * Press the submit button to apply changes or refresh to see current sensor states.
+ * 
+ * @param {string} deviceId The ID of the BLE device
+ * @param {string} deviceName The name of the BLE device
+ * 
+ * @returns {JSX.Element} - Rendered screen displaying a list of sensors with buttons to turn them off or on.
  */
 const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
-    const servUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-    const mic_UUID = '00000401-710e-4a5b-8d75-3e5b444bc3cf';
-    const camera_UUID = '00000402-710e-4a5b-8d75-3e5b444bc3cf';
-    const temp_UUID = '00000403-710e-4a5b-8d75-3e5b444bc3cf';
-    const airquality_UUID = '00000404-710e-4a5b-8d75-3e5b444bc3cf';
-    const scale_UUID = '00000405-710e-4a5b-8d75-3e5b444bc3cf';
-    const cpu_UUID = '00000406-710e-4a5b-8d75-3e5b444bc3cf';
+    // Service UUID and UUID's for each characteristic used on this screen.
+    const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+    const MIC_UUID = '00000401-710e-4a5b-8d75-3e5b444bc3cf';
+    const CAMERA_UUID = '00000402-710e-4a5b-8d75-3e5b444bc3cf';
+    const TEMP_UUID = '00000403-710e-4a5b-8d75-3e5b444bc3cf';
+    const AIRQUALITY_UUID = '00000404-710e-4a5b-8d75-3e5b444bc3cf';
+    const SCALE_UUID = '00000405-710e-4a5b-8d75-3e5b444bc3cf';
+    const CPU_UUID = '00000406-710e-4a5b-8d75-3e5b444bc3cf';
 
     // Define the type for Variables, so we can access and change our variable values.
     type VariablesType = {
@@ -57,124 +60,101 @@ const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ device
     // Initialize state used to keep track of the original variable values in order to detect changes.
     const [originalVariables, setOriginalVariables] = useState({ ...variables });
 
-    // useFocusEffect hook to fetch data whenever the tab is focused.
+    /**
+     * Runs when this tab is focused. Runs fetchData() to get variable values again.
+     */
     useFocusEffect(
         useCallback(() => {
         fetchData();
         }, [])
     );
 
+
     /**
-     * Function to fetch data from all characteristics.
+     * Calls readCharacteristic for each sensor to get there original values.
+     * 
      */
     const fetchData = async () => {
-        // Read auto_start value for microphone
-        await readCharacteristic(servUUID, mic_UUID, 'audio');
-
-        // Read auto_start value for camera
-        await readCharacteristic(servUUID, camera_UUID, 'video');
-
-        // Read auto_start value for cpu
-        await readCharacteristic(servUUID, temp_UUID, 'temp');
-
-        // Read auto_start value for air quality
-        await readCharacteristic(servUUID, airquality_UUID, 'airquality');
-
-        // Read auto_start value for scale
-        await readCharacteristic(servUUID, scale_UUID, 'scale');
-
-        // Read auto_start value for cpu
-        await readCharacteristic(servUUID, cpu_UUID, 'cpu');
+        await readCharacteristic(SERVICE_UUID, MIC_UUID, 'audio');
+        await readCharacteristic(SERVICE_UUID, CAMERA_UUID, 'video');
+        await readCharacteristic(SERVICE_UUID, TEMP_UUID, 'temp');
+        await readCharacteristic(SERVICE_UUID, AIRQUALITY_UUID, 'airquality');
+        await readCharacteristic(SERVICE_UUID, SCALE_UUID, 'scale');
+        await readCharacteristic(SERVICE_UUID, CPU_UUID, 'cpu');
     };
 
+
     /**
-     * Generic function to read a characteristic from a BLE device.
-     * @param {string} serviceUUID - UUID of the BLE service.
-     * @param {string} characteristicUUID - UUID of the BLE characteristic.
-     * @param {string} variableName - The name of the variable to update.
+     * Read characteristic from Raspberry Pi. Here we are reading the value "true/false" for each sensor.
+     * 
+     * @param {string} serviceUUID UUID of the BLE service.
+     * @param {string} characteristicUUID UUID of the BLE characteristic.
+     * @param {string} variableName The name of the variable to update.
      */
     const readCharacteristic = async (serviceUUID: string, characteristicUUID: string, variableName: string) => {
         try {
-        // Read characteristics for the deviceId and wait for completion
-        const readData = await manager.readCharacteristicForDevice(deviceId, serviceUUID, characteristicUUID);
-        console.log("Data read from the ble device: ", readData);
-    
-        // Extract the base64 encoded value from the read data
-        let base64Value = readData.value;
-    
-        if (base64Value) {
-            // Decode the base64 encoded value
-            let decodedValue = base64.decode(base64Value);
-    
-            // Trim whitespace from decoded value
-            let trimmedValue = decodedValue.trim();
+            // Read characteristics for the deviceId and wait for completion
+            const readData = await manager.readCharacteristicForDevice(deviceId, serviceUUID, characteristicUUID);
+            // console.log("Data read from the ble device: ", readData);
+        
+            let base64Value = readData.value;   // Extract the base64 encoded value from the read data
+        
+            if (base64Value) {
+                // Decode the base64 encoded value
+                let decodedValue = base64.decode(base64Value);
+        
+                // read value will look like "auto_start = true", here we extract the "true".
+                let trimmedValue = decodedValue.trim();
+                const match = trimmedValue.match(/:\s*(\S+)/);
+                if (match) trimmedValue = match[1];
+                trimmedValue = trimmedValue.trim();
 
-            const match = trimmedValue.match(/:\s*(\S+)/);
-            if (match) trimmedValue = match[1];
-            trimmedValue = trimmedValue.trim();
+                // Convert 'True'/'False' string to boolean
+                let booleanValue = trimmedValue.toLowerCase() === 'true';
 
-            // Convert 'True'/'False' string to boolean
-            let booleanValue = trimmedValue.toLowerCase() === 'true';
+                // Update the state with the new value for the variable
+                setVariables(prevVariables => ({
+                ...prevVariables,
+                [variableName]: booleanValue
+                }));
 
-            // Update the state with the new value for the variable
-            setVariables(prevVariables => ({
-            ...prevVariables,
-            [variableName]: booleanValue
-            }));
-
-            // Also update the originalVariables as this is the original value of the characteristic.
-            setOriginalVariables(prevOriginalVariables => ({
-            ...prevOriginalVariables,
-            [variableName]: booleanValue
-            }));
-        }
+                // Also update the originalVariables as this is the original value of the characteristic.
+                setOriginalVariables(prevOriginalVariables => ({
+                ...prevOriginalVariables,
+                [variableName]: booleanValue
+                }));
+            }
         } catch (error) {
-        // Log any errors that occur during the read operation.
-        console.log("Error while reading data from ble device: ", error);
+            // Log any errors that occur during the read operation.
+            console.log("Error while reading data from ble device: ", error);
         }
     }
 
+
     /**
-     * Generic function to write a characteristic to a BLE device.
-     * @param {string} serviceUUID - UUID of the BLE service.
-     * @param {string} characteristicUUID - UUID of the BLE characteristic.
-     * @param {string} variableName - The name of the variable to write.
+     * Generic function to write a characteristic to a Raspberry Pi.
+     * 
+     * @param {string} serviceUUID  UUID of the BLE service.
+     * @param {string} characteristicUUID   UUID of the BLE characteristic.
+     * @param {string} variableName The name of the variable to write.
      */
     const writeCharacteristic = async (serviceUUID: string, characteristicUUID: string, variableName: string) => {
         try {
-        // Check if the device is still connected
-        const connectedDevices = await manager.connectedDevices([serviceUUID]);
-        const isConnected = connectedDevices.some(device => device.id === deviceId);
-    
-        if (!isConnected) {
-            console.error('Device is not connected.');
-            try {
-                // Attempt to reconnect to the device
-                const device = await manager.connectToDevice(deviceId);
-                console.log('Reconnected to device:', device.name);
-            } catch (error) {
-                console.error('Error reconnecting to device:', error);
-                return; // Exit the function if reconnection fails
+            // Write the updated variables to the characteristic
+            if (deviceId) {
+                // convert the variable value to a JSON string
+                let variablesJSON = JSON.stringify((variables as {[key: string]: any})[variableName]);
+
+                // Values end up looking like: "1200", this trims off the quotation marks.
+                let trimmed = variablesJSON.replace(/"/g, '');
+
+                // Encode the trimmed value to base64
+                let valueBase64 = base64.encode(trimmed);
+
+                // Write the base64 encoded value to the characteristic.
+                await manager.writeCharacteristicWithResponseForDevice(deviceId, serviceUUID, characteristicUUID, valueBase64);
+                console.log("Variables updated successfully.");
             }
-        }
-    
-        // Write the updated variables to the characteristic
-        if (deviceId) {
-            // convert the variable value to a JSON string
-            let variablesJSON = JSON.stringify((variables as {[key: string]: any})[variableName]);
-            console.log("VARRRRR: ", variablesJSON);
-
-            // Values end up looking like: "1200", this trims off the quotation marks.
-            let trimmed = variablesJSON.replace(/"/g, '');
-            console.log(trimmed);
-
-            // Encode the trimmed value to base64
-            let valueBase64 = base64.encode(trimmed);
-
-            // Write the base64 encoded value to the characteristic.
-            await manager.writeCharacteristicWithResponseForDevice(deviceId, serviceUUID, characteristicUUID, valueBase64);
-            console.log("Variables updated successfully.");
-        }
         } catch (error) {
             console.error("Error updating variables:", error);
         }
@@ -182,28 +162,11 @@ const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ device
 
 
     /**
-     * Handles the submission of changes to the BLE device.
+     * Called when the Submit button is pressed. Shows the submission modal.
+     * 
      */
     const handleSubmit = async () => {
-        const serviceUUID = servUUID;
-        
         try {
-            // Check if the device is still connected
-            const connectedDevices = await manager.connectedDevices([serviceUUID]);
-            const isConnected = connectedDevices.some(device => device.id === deviceId);
-
-            if (!isConnected) {
-                console.error('Device is not connected.');
-                try {
-                    // Attempt to reconnect to the device
-                    const device = await manager.connectToDevice(deviceId);
-                    console.log('Reconnected to device:', device.name);
-                } catch (error) {
-                    console.error('Error reconnecting to device:', error);
-                    return; // Exit the function if reconnection fails.
-                }
-            }
-
             setModalVisible(true);
         } catch (error) {
             console.error("Error updating variables:", error);
@@ -212,27 +175,27 @@ const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ device
 
 
     /**
-    * Submits the changes to the BLE device by writing to the appropriate characteristics.
+    * Writes values that have been changed to the device.
+    * 
     */
     const submitChanges = async() => {
-        console.log("INSIDE submit changes")
         if (variables.audio !== originalVariables.audio) {
-          writeCharacteristic(servUUID, mic_UUID, 'audio');
+          writeCharacteristic(SERVICE_UUID, MIC_UUID, 'audio');
         }
         if (variables.video !== originalVariables.video) {
-            writeCharacteristic(servUUID, camera_UUID, 'video');
+            writeCharacteristic(SERVICE_UUID, CAMERA_UUID, 'video');
         }
         if (variables.temp !== originalVariables.temp) {
-            writeCharacteristic(servUUID, temp_UUID, 'temp');
+            writeCharacteristic(SERVICE_UUID, TEMP_UUID, 'temp');
         }
         if (variables.airquality !== originalVariables.airquality) {
-            writeCharacteristic(servUUID, airquality_UUID, 'airquality');
+            writeCharacteristic(SERVICE_UUID, AIRQUALITY_UUID, 'airquality');
         }
         if (variables.scale !== originalVariables.scale) {
-            writeCharacteristic(servUUID, scale_UUID, 'scale');
+            writeCharacteristic(SERVICE_UUID, SCALE_UUID, 'scale');
         }
         if (variables.cpu !== originalVariables.cpu) {
-            writeCharacteristic(servUUID, cpu_UUID, 'cpu');
+            writeCharacteristic(SERVICE_UUID, CPU_UUID, 'cpu');
         }
   
         console.log("Variables updated successfully.");
@@ -244,45 +207,54 @@ const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ device
     };
 
 
+    /**
+     * Renders a list of sensors with on/off switches along with a Submit and Refresh button.
+     * 
+     */
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Sensor Management:</Text>
-            <Text style={styles.instructions}>
-                View and manage all connected sensors to the Raspberry Pi. 
-                Customize sensor settings by enabling or disabling them.
-            </Text>
+            <ScrollView>
+                {/* Displays title and screen description */}
+                <Text style={styles.title}>Sensor Management:</Text>
+                <Text style={styles.instructions}>
+                    View and manage all connected sensors to the Raspberry Pi. 
+                    Customize sensor settings by enabling or disabling them.
+                </Text>
 
-            <CustomSwitch
-                label="Microphone"
-                value={variables.audio}
-                onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, audio: value }))}
-            />
-            <CustomSwitch
-                label="Camera"
-                value={variables.video}
-                onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, video: value }))}
-            />
-            <CustomSwitch
-                label="Thermometer"
-                value={variables.temp}
-                onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, temp: value }))}
-            />
-            <CustomSwitch
-                label="Air Quality"
-                value={variables.airquality}
-                onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, airquality: value }))}
-            />
-            <CustomSwitch
-                label="Scale"
-                value={variables.scale}
-                onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, scale: value }))}
-            />
-            <CustomSwitch
-                label="CPU"
-                value={variables.cpu}
-                onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, cpu: value }))}
-            />
+                {/* List of sensor switches */}
+                <CustomSwitch
+                    label="Microphone"
+                    value={variables.audio}
+                    onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, audio: value }))}
+                />
+                <CustomSwitch
+                    label="Camera"
+                    value={variables.video}
+                    onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, video: value }))}
+                />
+                <CustomSwitch
+                    label="Thermometer"
+                    value={variables.temp}
+                    onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, temp: value }))}
+                />
+                <CustomSwitch
+                    label="Air Quality"
+                    value={variables.airquality}
+                    onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, airquality: value }))}
+                />
+                <CustomSwitch
+                    label="Scale"
+                    value={variables.scale}
+                    onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, scale: value }))}
+                />
+                <CustomSwitch
+                    label="CPU"
+                    value={variables.cpu}
+                    onValueChange={(value) => setVariables(prevVariables => ({ ...prevVariables, cpu: value }))}
+                />
+            </ScrollView>
 
+            {/* Submit and Refresh buttons */}
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={[styles.submitButton, { marginRight: 10 }]} onPress={handleSubmit}>
                     <Text style={styles.submitButtonText}>Submit</Text>
@@ -292,6 +264,7 @@ const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ device
                 </TouchableOpacity>
             </View>
 
+            {/* Submission Modal */}
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -326,12 +299,26 @@ const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ device
 }
 
 
+/**
+ * Declaring props to include in the CustomSwitch component.
+ * 
+ */
 type CustomSwitchProps = {
     label: string;
     value: boolean;
     onValueChange: (value: boolean) => void;
 };
 
+
+/**
+ * Component for rendering a sensor list item and switch
+ * 
+ * @param {string}  label   The sensor label to display in the sensor list item
+ * @param {boolean} value   Current state of the sensor (0n/off)
+ * @param onValueChange     Function for action performed if the switch is pressed
+ * 
+ * @returns {JSX.Element}   List item containg the sensor label and on/off switch.
+ */
 const CustomSwitch: React.FC<CustomSwitchProps> = ({ label, value, onValueChange }) => {
     return (
         <View style={styles.toggleContainer}>
