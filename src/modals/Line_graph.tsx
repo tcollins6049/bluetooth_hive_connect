@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, Dimensions, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import FlashMessage, { showMessage } from "react-native-flash-message";
 import { Rect, Text as TextSVG, Svg } from "react-native-svg";
 
 interface LineGraphProps {
@@ -14,6 +13,15 @@ interface LineGraphProps {
     color_code: string
 }
 
+
+/**
+ * Given data, creates line graph using that data for points
+ * 
+ * @param chartData - Contains the labels and there corresponding values for points in the graph
+ * @param color_code - Color to make graph
+ *  
+ * @returns {JSX.Element} Line graph with passed in chartData
+ */
 const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
   let [tooltipPos, setTooltipPos] = useState({x: 0, y: 0, visible: false, value: 0})
 
@@ -25,7 +33,7 @@ const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
             width={Dimensions.get('window').width * 0.92}
             height={220}
             fromZero={true}
-            //withVerticalLabels={false}
+            // withVerticalLabels={false}
             yAxisInterval={2}
             withDots={true}
             chartConfig={{
@@ -100,7 +108,6 @@ const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
               })
                   : 
               setTooltipPos({ x: data.x, value: data.value, y: data.y, visible: true });
-
           }}
           />
         )}
@@ -109,5 +116,4 @@ const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
   );
 };
   
-
 export default LineGraph;

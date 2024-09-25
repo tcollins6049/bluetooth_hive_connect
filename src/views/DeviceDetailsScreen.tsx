@@ -29,7 +29,7 @@ import Det_FileRead from './Det_Components/Det_FileRead';
 const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, navigation }) => {
   // UUID's for needed characteristics
   const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-  const cpu_file_UUID = '00000303-710e-4a5b-8d75-3e5b444bc3cf';
+  // const cpu_file_UUID = '00000303-710e-4a5b-8d75-3e5b444bc3cf';
   const CPU_LINE_UUID = '00000301-710e-4a5b-8d75-3e5b444bc3cf';
   const HUMIDITY_LINE_UUID = '00000302-710e-4a5b-8d75-3e5b444bc3cf';
   const CPU_SENSOR_UUID = '00000002-710e-4a5b-8d75-3e5b444bc3cf';
@@ -445,7 +445,7 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
           // Also push on the new value to both the graph data and overall data arrays
           graph_labels.push(label.substring(0, 6).replace(/"/g, '').replace(/-/g, ':'));
           graph_values.push(parseFloat(value));
-          
+
           all_times.push(label.substring(0, 6).replace(/"/g, '').replace(/-/g, ':'));
           all_values.push(value);
         }
