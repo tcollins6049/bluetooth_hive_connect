@@ -7,5 +7,5 @@
   - [requestPermissions()](#disconnect)
 
 
- ## App_permissions
+## App_permissions.tsx
 
