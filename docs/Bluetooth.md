@@ -1,8 +1,5 @@
 # Bluetooth Directory Documentation
 
-## Table of Contents
-- [App_permissions](#App_permissions.tsx)
-
 
 ## App_permissions.tsx
 File used to request necessary permissions for application from device. The following permissions are requested:
