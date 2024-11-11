@@ -26,3 +26,5 @@ File used to check if the AppMAIS process is currently running. This is used to 
   - *capture_duration_seconds*: Variable on Raspberry Pi, determines how long the Pi records data at each interval. Ex. ) 60 means that it records for 60 seconds.
 
   Example:) If *capture_interval = 300* and *capture_duration = 60*, this means at time 0-59, the Appmais process will be recording therefore we shouldn't run certain functions. But at times 60-299, the Appmais process is not recording therefore we can run those functions.
+
+<span style="color:blue">some *blue* text</span>
