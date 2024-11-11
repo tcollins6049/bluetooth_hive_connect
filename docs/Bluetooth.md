@@ -27,4 +27,6 @@ File used to check if the AppMAIS process is currently running. This is used to 
 
   Example:) If *capture_interval = 300* and *capture_duration = 60*, this means at time 0-59, the Appmais process will be recording therefore we shouldn't run certain functions. But at times 60-299, the Appmais process is not recording therefore we can run those functions.
 
-<span style="color:blue">some *blue* text</span>
+
+## BLEManagerSingleton.ts
+File used to manage a single instance of the BLEManager. This is needed throughout the application to perform various bluetooth operations.
