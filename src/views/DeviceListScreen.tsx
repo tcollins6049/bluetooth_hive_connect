@@ -8,11 +8,11 @@ import {
     FlatList 
 } from 'react-native';
 
-import manager from '../files/BLEManagerSingleton';
-import ConnectingModal from '../modals/connectingModal';
+import manager from '../bluetooth/BLEManagerSingleton';
+import ConnectingModal from '../modals/ConnectingModal';
 import ScanningModal from '../modals/ScanningModal';
-import registered_devices, { DeviceInterface } from '../files/devices';
-import requestPermissions from '../files/app_permissions';
+import registered_devices, { DeviceInterface } from '../registered_devices';
+import requestPermissions from '../bluetooth/app_permissions';
 
 
 /**
@@ -20,7 +20,6 @@ import requestPermissions from '../files/app_permissions';
  * Also contains a scan button in case a device has not been registered yet.
  * 
  * @param {any} navigation  
- * 
  * @returns {JSX.Element}  A screen containing a list of devices loaded from "../files/devices".
  */
 const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -56,6 +55,7 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const connectToDevice = async (device: DeviceInterface) => {
         // Stop scanning for devices, show the connecting modal
         manager.stopDeviceScan();
+        setScanModalVisible(false);
         setCurrentDeviceName(device.name || 'Unknown Device');
         set_connecting_modalVisible(true);
         
@@ -65,28 +65,27 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         try {
             // Delay and check if cancel was pressed
             // await new Promise(resolve => setTimeout(resolve, 1000));
-            if (isCancelled.current) throw new Error('Connection cancelled');
+            // if (isCancelled.current) throw new Error('Connection cancelled');
 
             // Connect to device and discover services and characteristics attached to device
-            // await manager.connectToDevice(device.id);
-            await manager.connectToDevice(device.id, { autoConnect: true });
+            // Addon autoConnect: true to make it constantly try reconnecting
+            // await manager.connectToDevice(device.id, { autoConnect: true });
+            await manager.connectToDevice(device.id);
             await manager.discoverAllServicesAndCharacteristicsForDevice(device.id);
-    
+
             // await new Promise(resolve => setTimeout(resolve, 1000));
-            if (isCancelled.current) throw new Error('Connection cancelled');
+            // if (isCancelled.current) throw new Error('Connection cancelled');
 
             // Connection was successful, stop showing connecting modal and navigate to the next screen.
             set_connecting_modalVisible(false);
             navigation.navigate('Password', { deviceId: device.id, deviceName: device.name });
         } catch (error) {
-            // If error was thrown due to cancel
-            if (error instanceof Error && error.message === 'Connection cancelled') {
-                console.log('Connection attempt cancelled');
+            if (isCancelled.current) {
+                console.log("Connection attempt was canceled by user")
             } else {
                 console.log('Error connecting to device:', error);
-                if (!isCancelled.current) {
-                    showRetryAlert(device);
-                }
+                showRetryAlert(device);
+                isCancelled.current = true;
             }
             set_connecting_modalVisible(false);
         }
@@ -95,7 +94,6 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     /**
      * Handler method for the cancel button. Called once the cancel button within the connecting modal is pressed.
-     * 
      */
     const handleCancelConnection = () => {
         isCancelled.current = true;
@@ -110,18 +108,20 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
      * @param {DeviceInterface} device  Contains the fields [name: string, id: string]
      */
     const showRetryAlert = (device: DeviceInterface) => {
-        Alert.alert(
-            "Connection Failed",
-            "Would you like to try again?",
-            [
-                {
-                    text: "Cancel",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
-                },
-                { text: "Retry", onPress: () => connectToDevice(device) }
-            ]
-        );
+        if (!isCancelled.current) {
+            Alert.alert(
+                "Connection Failed",
+                "Would you like to try again?",
+                [
+                    {
+                        text: "Cancel",
+                        onPress: () => console.log("Cancel Pressed"),
+                        style: "cancel"
+                    },
+                    { text: "Retry", onPress: () => connectToDevice(device) }
+                ]
+            );
+        }
     };
 
 
@@ -157,7 +157,6 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     /**
      * Called when the stop button is pressed on the scanning modal. Stops the scan process.
-     * 
      */
     const stopScan = () => {
         manager.stopDeviceScan();
@@ -170,7 +169,6 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
      * When pressed, the application will attempt a BLE connection with the selected device.
      * 
      * @param {DeviceInterface} item    Contains the fields [name: string, id: string]
-     * 
      * @returns {JSX.Element}   Renderes a pressable device name list item.
      */
     const renderItem = ({ item }: { item: DeviceInterface }) => (
@@ -187,7 +185,6 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
      * The return, this is what is rendered for this screen of the application.
      * A list of devices from the registered devices list will be rendered. Pressing one of these will attempt to connect to the device.
      * Also renders a scan button for finding devices not listed in the registered devices list.
-     * 
      */
     return (
         <View style={styles.container}>
@@ -229,11 +226,7 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#f0f0f0',
-    },
+    container: { flex: 1, padding: 20, backgroundColor: '#f0f0f0' },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -253,9 +246,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         width: '100%',
     },
-    deviceText: {
-        fontSize: 18,
-    },
+    deviceText: { fontSize: 18 },
     separator: {
         height: 1,
         backgroundColor: '#000',

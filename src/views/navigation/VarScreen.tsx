@@ -12,8 +12,7 @@ const Tab = createMaterialTopTabNavigator();
  * 
  * @param {any} route
  * @param {any} navigation
- * 
- * @returns 
+ * @returns {TabActionHelpers.Navigator}  Navigation to different screens
  */
 const VarScreen: React.FC<{ route: any, navigation: any }> = ({ route, navigation }) => {
   const { deviceId, deviceName } = route.params;

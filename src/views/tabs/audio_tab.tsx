@@ -13,8 +13,8 @@ import base64 from 'react-native-base64';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
 
-import manager from '../../files/BLEManagerSingleton';
-import isDuringAppmais from '../../files/appmaisCheck';
+import manager from '../../bluetooth/BLEManagerSingleton';
+import isDuringAppmais from '../../bluetooth/appmaisCheck';
 
 
 /**
@@ -24,7 +24,9 @@ import isDuringAppmais from '../../files/appmaisCheck';
  * 
  * @returns {JSX.Element} Renders most recent audio file information.
  */
-const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
+const AudioTab: React.FC<{ route: any }> = ({ route }) => {
+  const { deviceId, deviceName } = route.params;
+
   const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
   const AUDIO_FILE_INFO_UUID = '00000201-710e-4a5b-8d75-3e5b444bc3cf';
 
@@ -47,7 +49,7 @@ const AudioTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
         // Fetch the file when the tab is focused
         await readFileInfoCharacteristic(SERVICE_UUID, AUDIO_FILE_INFO_UUID);
 
-        isDuringAppmais(deviceId);
+        isDuringAppmais(deviceId, 5);
       }
 
       initial();

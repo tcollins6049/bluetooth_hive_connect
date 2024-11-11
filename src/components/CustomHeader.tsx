@@ -3,11 +3,14 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
-import manager from '../files/BLEManagerSingleton';
+import manager from '../bluetooth/BLEManagerSingleton';
 
 
+/**
+ * Variables for the custom header
+ */
 interface CustomHeaderProps {
-    title: string;
+    title: string;  // Title to be displayed in the header
 }
 
 
@@ -15,8 +18,7 @@ interface CustomHeaderProps {
  * Responsible for displaying a title and disconect button.
  * The disconnect button is able to disconnect from all connect devices and return the user to the DeviceList screen.
  * 
- * @param {string}  title   Title of the screen we are on
- *  
+ * @param
  * @returns {JSX.Element}   Displays a header containing a title and disconnect button.
  */
 const CustomHeader: React.FC<CustomHeaderProps> = ({ title }) => {
@@ -27,7 +29,6 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({ title }) => {
     /**
      * Called when the "Disconnect" button is pressed.
      * Disconnects the BleManager and navigates to the DeviceList screen.
-     * 
      */
     const handleDisconnect = async () => {
         await disconnectBleManager();
@@ -38,7 +39,6 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({ title }) => {
     /**
      * Header for the application. 
      * Displays the page title on the left and a disconnect button on the right
-     * 
      */
     return (
         <View style={styles.header}>
@@ -53,7 +53,6 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({ title }) => {
 
 /**
  * Disconnects from all connected devices.
- * 
  */
 const disconnectBleManager = async () => {
     try {
@@ -78,19 +77,10 @@ const styles = StyleSheet.create({
         padding: 15,
         backgroundColor: '#f0f0f0',
     },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    disconnectButton: {
-        padding: 10,
-        backgroundColor: '#ff0000',
-        borderRadius: 5,
-    },
-    disconnectText: {
-        color: '#ffffff',
-        fontSize: 16,
-    },
+    title: { fontSize: 20, fontWeight: 'bold' },
+    disconnectButton: { padding: 10, backgroundColor: '#ff0000', borderRadius: 5 },
+    disconnectText: { color: '#ffffff', fontSize: 16 },
 });
+
 
 export default CustomHeader;

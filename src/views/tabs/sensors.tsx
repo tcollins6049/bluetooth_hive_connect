@@ -11,7 +11,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
 
-import manager from '../../files/BLEManagerSingleton';
+import manager from '../../bluetooth/BLEManagerSingleton';
 
 
 /**

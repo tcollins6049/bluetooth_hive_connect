@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import base64 from 'react-native-base64';
 
-import manager from '../../files/BLEManagerSingleton';
-import isDuringAppmais from '../../files/appmaisCheck';
+import manager from '../../bluetooth/BLEManagerSingleton';
+import isDuringAppmais from '../../bluetooth/appmaisCheck';
 import AppTimingModal from '../../modals/AppTimingModal';
 
 
@@ -22,13 +22,12 @@ import AppTimingModal from '../../modals/AppTimingModal';
  * 
  * @param {string}  deviceId  id of the connected device
  * @param {string}  deviceName  name of the connected device
- * 
  * @returns {JSX.Element} Renders text box for command entry along with list of quick commands.
  */
 const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
   // Service UUID and Command charcteristic UUID
   const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
-  const COMMAND_UUID = "00000023-710e-4a5b-8d75-3e5b444bc3cf";
+  const COMMAND_UUID = "00000501-710e-4a5b-8d75-3e5b444bc3cf";
 
   const [error, setError] = useState<string | null>(null);
   const [command, setCommand] = useState<string>('');
@@ -55,7 +54,7 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
       const encodedCommand = base64.encode(commandToSend);
 
       // If appmais isn't currently recording, write the command to the Pi.
-      if (!(await isDuringAppmais(deviceId))) {
+      if (!(await isDuringAppmais(deviceId, 5))) {
         // Write the command to the characteristic
         await manager.writeCharacteristicWithResponseForDevice(
           deviceId,
@@ -96,7 +95,6 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
 
   /**
    * Called when the Send Command button is pressed. Shows the Are you sure? modal.
-   * 
    */
   const sendCurrentCommand = () => {
     setIsModalVisible(true);
@@ -106,7 +104,6 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
   /**
    * Called after pressing "Yes" within the Are you sure? modal.
    * Sets the modal visibility to false and sends the user's entered command.
-   * 
    */
   const confirmSendCommand = async () => {
     setIsModalVisible(false);
@@ -128,7 +125,6 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
   /**
    * Renders a text box for command entry and a clear button.
    * Also shows a list of quick commands along with a Send Command button.
-   * 
    */
   return (
     <View style={styles.container}>
@@ -210,12 +206,7 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
 
 
 const styles = StyleSheet.create({
-  header: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'flex-start'
-  },
+  header: { flex: 1, padding: 20, backgroundColor: '#f0f0f0', alignItems: 'flex-start' },
   textboxContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -223,39 +214,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     padding: 20,
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  horizontalLine: {
-    borderBottomColor: 'black',
-    borderBottomWidth: 1,
-    width: '100%',
-    marginVertical: 10,
-  },
-  input: {
-    flex: 1,
-    borderColor: 'gray',
-    borderWidth: 1,
-    padding: 10,
-  },
-  quickCommandsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    width: '100%',
-    padding: 5,
-    marginBottom: 10,
-  },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  horizontalLine: { borderBottomColor: 'black', borderBottomWidth: 1, width: '100%', marginVertical: 10 },
+  input: { flex: 1, borderColor: 'gray', borderWidth: 1, padding: 10 },
+  quickCommandsTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+  buttonContainer: { width: '100%', padding: 5, marginBottom: 10 },
   button: {
     backgroundColor: 'white',
     borderWidth: 1,
@@ -264,14 +228,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 5,
   },
-  buttonText: {
-    color: 'black',
-    fontSize: 16,
-  },
-  errorText: {
-    color: 'red',
-    marginTop: 20,
-  },
+  buttonText: { color: 'black', fontSize: 16 },
+  errorText: { color: 'red', marginTop: 20 },
   sendButton: {
     marginTop: 20,
     marginVertical: 20,
@@ -283,11 +241,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#000',
   },
-  sendButtonText: {
-      color: '#000',
-      fontSize: 18,
-      fontWeight: 'bold',
-  },
+  sendButtonText: { color: '#000', fontSize: 18, fontWeight: 'bold' },
   footer: {
     padding: 20,
     borderTopWidth: 1,
@@ -295,12 +249,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     alignItems: 'center',
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
   modalContent: {
     width: '80%',
     padding: 20,
@@ -308,11 +257,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  modalText: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
+  modalText: { fontSize: 18, textAlign: 'center', marginBottom: 20 },
   modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

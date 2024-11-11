@@ -1,9 +1,9 @@
-import manager from '../../files/BLEManagerSingleton';
 import base64 from 'react-native-base64';
 import { Buffer } from 'buffer';
+import manager from '../../bluetooth/BLEManagerSingleton';
 
 
-// Service UUID and UUID's fro characteristics used here.
+// Service UUID and UUID's for characteristics used here.
 const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
 const resetCharacteristicUUID = '00000208-710e-4a5b-8d75-3e5b444bc3cf';
 const CPU_SENSOR_FILE_UUID = '00000211-710e-4a5b-8d75-3e5b444bc3cf';
@@ -16,7 +16,6 @@ let deviceId = '';
  * In this case, we will be pulling csv files for the sensors.
  * 
  * @param characteristicUUID UUID of the characteristic to be read
- * 
  * @returns {String} Data read from file
  */
 const perform_file_read = async (characteristicUUID: string) => {
@@ -59,7 +58,6 @@ const perform_file_read = async (characteristicUUID: string) => {
 /**
  * This function is responsible for calling a characteristic on the GATT server which resets the offset for the file read.
  * This is so we make sure we are starting at the beginning of the file.
- * 
  */
 const resetOffset = async () => {
     try {
@@ -81,7 +79,6 @@ const resetOffset = async () => {
  * This function is responsible for reading a chunk of data from the file.
  * 
  * @param characteristicUUID UUID for the characteristic of the file being read.
- * 
  * @returns Buffer containg chunk of data or null
  */
 const getChunk = async (characteristicUUID: string): Promise<Buffer | null> => {
@@ -113,7 +110,6 @@ const getChunk = async (characteristicUUID: string): Promise<Buffer | null> => {
  * 
  * @param {String}  device_Id   id of the connected device
  * @param {String}  file_type   Type of sensor file we are reading [cpu, ht]. (determines which characteristic is read)
- * 
  * @returns An array containing each line from the read file.
  */
 const Det_GraphData = async (device_Id: string, file_type: string) => {
@@ -131,5 +127,6 @@ const Det_GraphData = async (device_Id: string, file_type: string) => {
 
     return [];
 }
+
 
 export default Det_GraphData;

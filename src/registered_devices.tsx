@@ -15,4 +15,5 @@ const devices: DeviceInterface[] = [
     // Add more devices as needed
 ];
 
+
 export default devices;

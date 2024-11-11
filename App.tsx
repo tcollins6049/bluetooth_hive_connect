@@ -7,7 +7,9 @@ import DeviceListScreen from './src/views/DeviceListScreen';
 import DeviceDetailScreen from './src/views/DeviceDetailsScreen';
 import VarScreen from './src/views/navigation/VarScreen';
 import AudVidScreen from './src/views/navigation/AudVidScreen';
-import CustomHeader from './src/modals/CustomHeader';
+import AudioScreen from './src/views/tabs/audio_tab';
+import VideoScreen from './src/views/tabs/video_tab';
+import CustomHeader from './src/components/CustomHeader';
 
 
 const Stack = createStackNavigator();
@@ -22,6 +24,8 @@ const App: React.FC = () => {
           {/*<Stack.Screen name='TabScreen' component={TabScreen} options={{ title: 'Device Details' }} />*/}
           <Stack.Screen name='VarScreen' component={VarScreen} options={{title: 'Modifications'}} />
           <Stack.Screen name='AudVidScreen' component={AudVidScreen} options={{ title: ''}} />
+          <Stack.Screen name="audio" component={AudioScreen} options={{ title: '' }} />
+          <Stack.Screen name="video" component={VideoScreen} options={{ title: '' }} />
         </Stack.Navigator>
       </NavigationContainer>
   );

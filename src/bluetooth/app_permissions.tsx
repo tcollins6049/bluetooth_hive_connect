@@ -3,34 +3,32 @@ import { PermissionsAndroid, Platform } from 'react-native';
 
 /**
  * Requests permission for the application to access the device's local storage
- * 
  */
 const requestExternalStoragePermission = async () => {
     try {
-    const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-        title: "Storage Permission",
-        message: "This app needs access to your storage to save files",
-        buttonNeutral: "Ask Me Later",
-        buttonNegative: "Cancel",
-        buttonPositive: "OK"
+        const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            {
+                title: "Storage Permission",
+                message: "This app needs access to your storage to save files",
+                buttonNeutral: "Ask Me Later",
+                buttonNegative: "Cancel",
+                buttonPositive: "OK"
+            }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log("You can use the storage");
+        } else {
+            console.log("Storage permission denied");
         }
-    );
-    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("You can use the storage");
-    } else {
-        console.log("Storage permission denied");
-    }
     } catch (err) {
-    console.warn(err);
+        console.warn(err);
     }
 };
 
 
 /**
  * Requests permission for the application to use the device's bluetooth
- * 
  */
 const requestBluetoothPermission = async () => {
     try {
@@ -57,7 +55,6 @@ const requestBluetoothPermission = async () => {
 
 /**
  * Called in the application. Requests all necessary permissions.
- * 
  */
 const requestPermissions = async () => {
     requestBluetoothPermission();
@@ -65,5 +62,6 @@ const requestPermissions = async () => {
         requestExternalStoragePermission();
     }
 }
+
 
 export default requestPermissions;

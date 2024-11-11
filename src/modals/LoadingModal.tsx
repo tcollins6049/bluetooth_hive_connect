@@ -3,19 +3,16 @@ import {
     View, 
     Text, 
     StyleSheet, 
-    Button, 
     Modal, 
     ActivityIndicator 
 } from 'react-native';
 
 
 /**
- * Variables used for connecting modal.
+ * Variables used for the Loading Modal
  */
-interface ConnectingModalProps {
-    visible: boolean;   // Is the modal visible
-    deviceName: string; // Name of device we are connecting to
-    onCancel: () => void;   // What to do when cancel is pressed
+interface LoadingModalProps {
+    visible: boolean;   // Determines if the modal is visible
 }
 
 
@@ -23,10 +20,10 @@ interface ConnectingModalProps {
  * Modal used while device connection is being attempted.
  * Shows a loading icon
  * 
- * @param param0 
+ * @param
  * @returns {JSX.Element}   Displays a loading icon along with a cancel connection button.
  */
-const ConnectingModal: React.FC<ConnectingModalProps> = ({ visible, deviceName, onCancel }) => {
+const LoadingModal: React.FC<LoadingModalProps> = ({ visible }) => {
     return (
         <Modal
             transparent={true}
@@ -37,9 +34,7 @@ const ConnectingModal: React.FC<ConnectingModalProps> = ({ visible, deviceName, 
             <View style={styles.modalBackground}>
                 <View style={styles.modalContainer}>
                     <ActivityIndicator size="large" color="#0000ff" />
-                    <Text style={styles.text}>Connecting to device:</Text>
-                    <Text style={styles.deviceName}>{deviceName}</Text>
-                    <Button title="Cancel" onPress={onCancel} />
+                    <Text style={styles.text}>Loading Image:</Text>
                 </View>
             </View>
         </Modal>
@@ -62,4 +57,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default ConnectingModal;
+export default LoadingModal;

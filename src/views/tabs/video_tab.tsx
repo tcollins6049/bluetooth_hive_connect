@@ -12,10 +12,11 @@ import base64 from 'react-native-base64';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
 
-import manager from '../../files/BLEManagerSingleton';
-import isDuringAppmais from '../../files/appmaisCheck';
-import LineGraph from '../../modals/Line_graph';
+import manager from '../../bluetooth/BLEManagerSingleton';
+import isDuringAppmais from '../../bluetooth/appmaisCheck';
+import LineGraph from '../../components/Line_graph';
 import AppTimingModal from '../../modals/AppTimingModal';
+import LoadingModal from '../../modals/LoadingModal';
 
 
 /**
@@ -24,10 +25,11 @@ import AppTimingModal from '../../modals/AppTimingModal';
  * 
  * @param {string}  deviceId  id of connected device
  * @param {string}  deviceName  name of connected device
- * 
  * @returns {JSX.Element} Screen displaying basic video info and entropy graph.
  */
-const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
+const VideoTab: React.FC<{ route: any }> = ({ route }) => {
+  const { deviceId, deviceName } = route.params;
+  
   // Service UUID and UUID's for characteristics used on this screen.
   const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
   const VIDEO_FILE_INFO_UUID = '00000202-710e-4a5b-8d75-3e5b444bc3cf';
@@ -35,7 +37,7 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   const FRESET_UUID = '00000204-710e-4a5b-8d75-3e5b444bc3cf';
   const STATIC_UUID = '00000207-710e-4a5b-8d75-3e5b444bc3cf';
   const SRESET_UUID = '00000208-710e-4a5b-8d75-3e5b444bc3cf';
-  const COMMAND_UUID = '00000023-710e-4a5b-8d75-3e5b444bc3cf';
+  const COMMAND_UUID = '00000501-710e-4a5b-8d75-3e5b444bc3cf';
   const VIDEO_LINE_UUID = '00000209-710e-4a5b-8d75-3e5b444bc3cf';
 
   const [videoImagePath, setVideoImagePath] = useState(''); // Holds the path of the extracted frame
@@ -50,6 +52,7 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   const [showPicturePopup, setShowPicturePopup] = useState(false);
 
   const [timing_modalVisible, set_timing_modalVisible] = useState(false); // Sets visibility of timing modal.
+  const [loadModalVisible, setLoadModalVisible] = useState<boolean>(false);
 
 
   // On focus, get basic file info and graph info.
@@ -165,18 +168,21 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   /**
    * Called when the "Take Picture" button is pressed.
    * Sends a command to the Pi to make it take a picture, then retrieves this picture from the Pi.
-   * 
    */
   const handlePicture = async () => {
     try {
       // If the AppMAIS process is not currently running.
-      if (!(await isDuringAppmais(deviceId))) {
+      if (!(await isDuringAppmais(deviceId, 25))) {
+        setLoadModalVisible(true);
         // Send command to Pi to take picture
-        await sendCommand('libcamera-still -q 10 -o picture.jpg')
+        await sendCommand('libcamera-still -q 10 -o /home/bee/GATT_server/picture.jpg')
+        await new Promise(resolve => setTimeout(resolve, 5000));
 
         // Get picture from Pi.
-        await fetchFile(SERVICE_UUID, STATIC_UUID, SRESET_UUID, 'hive_picture.jpg', setPictureImagePath);
-        setShowPicturePopup(true);
+        const result = await fetchFile(SERVICE_UUID, STATIC_UUID, SRESET_UUID, 'hive_picture.jpg', setPictureImagePath);
+
+        setLoadModalVisible(false);
+        setShowPicturePopup(result);
       } else {
         // AppMAIS process is running, show modal telling user to wait and try again.
         console.log("Couldn't take picture, appmais process is running")
@@ -221,6 +227,7 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
           errorMessage = writeError.message;
         }
       }
+      console.log("ERROR MESSAGE: ", errorMessage);
     }
   };
 
@@ -233,7 +240,6 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
    * 
    * @param {string}  serviceUUID The service UUID
    * @param {string}  characteristicUUID  UUID of the characteristic being read.
-   * 
    * @returns {Buffer | null} A 512 byte chunk of data from a file
    */
   const getChunk = async (serviceUUID: string, characteristicUUID: string): Promise<Buffer | null> => {
@@ -320,9 +326,16 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       }
 
       // Save combined chunks to file.
-      await saveToFile(combinedData, file_name, setImagePath);
+      console.log("Combined data: ", combinedData);
+      if (combinedData.length > 0) { 
+        await saveToFile(combinedData, file_name, setImagePath);
+        return true;
+      } else {
+        return false;
+      }
     } catch (error) {
       console.log("Error occured in fetchFile: ", error);
+      return false;
     }
   }
 
@@ -335,7 +348,7 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
    * @param {React.Dispatch<React.SetStateAction<string>>}  setImagePath  The variable to store the final image path in
    */
   const saveToFile = async (data: Buffer, file_name: string, setImagePath: React.Dispatch<React.SetStateAction<string>>) => {
-    const path = RNFS.ExternalDirectoryPath + '/' + file_name;
+    const path = RNFS.ExternalDirectoryPath + '/' + file_name + `?timestamp=${new Date().getTime()}`;
 
     try {
         await RNFS.writeFile(path, data.toString('base64'), 'base64');  // Write the buffer data to the file directly
@@ -350,7 +363,7 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
 
   // --------------------------- Entropy Graph ----------------------- //
 
-  const [video_chartData, set_video_chartData] = useState<any>(null); // useState to hold chart data
+  const [video_chartData, set_video_chartData] = useState<any>({ labels: [], datasets: [{ data: [0], strokeWidth: 2 }] }); // useState to hold chart data
 
   /**
    * Resets the offset of reading the video file sizes csv file.
@@ -408,8 +421,10 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       const response = await readCharacteristic(SERVICE_UUID, VIDEO_LINE_UUID) // Read line from file
 
       // Decode line, if line is "EOF", we have reached the end of the file and are finished.
-      line_data = base64.decode(response!.value!)
-      if (line_data === "EOF") {
+      if (response && response.value) {
+        line_data = base64.decode(response.value)
+      }
+      if (line_data === "EOF" || line_data == null) {
         break;
       }
 
@@ -426,7 +441,9 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
       }
     }
 
-    set_video_chartData({ labels: labels, datasets: [{ data: values, strokeWidth: 2 }] });  // Add label and value array data to the chartData
+    if (values && values.length > 0) {
+      set_video_chartData({ labels: labels, datasets: [{ data: values, strokeWidth: 2 }] });  // Add label and value array data to the chartData
+    }
   }
 
   // ------------------------------------------------------------------- //
@@ -434,15 +451,22 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   /**
    * Called when "Get Frame" is pressed.
    * Gets a video frame from the Pi and displays it on screen.
-   * 
    */
   const handleFetchVideoFile = async () => {
     try {
       // If the AppMAIS process is not currently running
-      if (!(await isDuringAppmais(deviceId))) {
+      if (!(await isDuringAppmais(deviceId, 5))) {
+        setLoadModalVisible(true);
         // Get extracted video frame from Pi.
-        await fetchFile(SERVICE_UUID, VIDEO_UUID, FRESET_UUID, 'video_frame.jpg', setVideoImagePath);
-        setShowImagePopup(true);
+        const result = await fetchFile(SERVICE_UUID, VIDEO_UUID, FRESET_UUID, 'video_frame.jpg', setVideoImagePath);
+        const path = videoImagePath;
+        setVideoImagePath("");
+        setTimeout(() => {
+          setVideoImagePath(path);
+        }, 10);
+
+        setLoadModalVisible(false);
+        setShowImagePopup(result);
       } else {
         // AppMAIS process is running, tells user to wait and try again.
         console.log("Cannot extract frame, the appmais process is running");
@@ -457,9 +481,9 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
   /**
    * Displays the most recent video files basic data (date and file size)
    * Displays a line graph based around video file sizes.
-   * Displays two buttons, "Get Frame" retrives a frame from the most recent recording on the PI
+   * Displays two buttons, 
+   *  "Get Frame" retrives a frame from the most recent recording on the PI
    *  "Take Picture" uses the camera attached to the Pi to take a picture.
-   * 
    */
   return (
     <View style={styles.container}>
@@ -489,6 +513,7 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
                       <Text style={styles.closeButtonText}>X</Text>
                   </TouchableOpacity>
                   <Image source={{ uri: 'file://' + videoImagePath }} style={styles.popupImage} resizeMode="contain" />
+                  {/* <Image source={{ uri: 'file://' + imagePath }} style={styles.popupImage} resizeMode="contain" /> */}
               </View>
           )}
           {showPicturePopup && (
@@ -527,27 +552,19 @@ const VideoTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId
         isVisible={timing_modalVisible}
         onClose={() => set_timing_modalVisible(false)}
       />
+
+      <LoadingModal
+        visible={loadModalVisible}
+      />
     </View>
   )
 };
-  
+
 
 const styles = StyleSheet.create({
-  headContainer: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    backgroundColor: '#f0f0f0',
-    alignItems: 'flex-start',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
+  headContainer: { padding: 20, borderBottomWidth: 1, borderBottomColor: '#ccc', backgroundColor: '#f0f0f0', alignItems: 'flex-start' },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  title: { fontSize: 24, fontWeight: 'bold' },
   instructions: {
     fontSize: 16,
     color: '#555',

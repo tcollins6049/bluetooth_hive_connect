@@ -12,7 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
 
-import manager from '../../files/BLEManagerSingleton';
+import manager from '../../bluetooth/BLEManagerSingleton';
 
 
 /**
@@ -20,7 +20,6 @@ import manager from '../../files/BLEManagerSingleton';
  * 
  * @param {string} props.deviceId The ID of the connected BLE device
  * @param {string} props.deviceName The name of the connected BLE device
- * 
  * @returns {JSX.Element} Screen containing entries for each variable within the config file. Also contains a submit and refresh button.
  */
 const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
@@ -187,7 +186,6 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
    * Checks if any variables have been changed from there original values. If not then nothing happens.
    * If variables have been changed from there original values, the changedVariables array is updated accordingly.
    * Also, the Are you sure? modal is displayed.
-   * 
    */
   const handleSubmit = async () => {
     try {
@@ -213,7 +211,6 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
   /**
    * Submits the changes to the BLE device by writing to the appropriate characteristics.
    * Only performs a write if that variable was changed.
-   * 
    */
   const submitChanges = () => {
     if (variables.capture_window_start_time !== originalVariables.capture_window_start_time) {  // capture_window_start_time
@@ -250,7 +247,6 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
 
   /**
    * Calls readCharacteristic for all config variables. 
-   * 
    */
   const fetchData = async () => {
     // The following variables are for every sensor besides video
@@ -271,7 +267,6 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
    * The return for this screen, renders each config file variable in a list.
    * Each variable shows a text box conataining the current value.
    * Variables can be edited within the text box and by pressing submit.
-   * 
    */
   return (
     <View style={styles.container}>

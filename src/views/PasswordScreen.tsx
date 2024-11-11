@@ -8,12 +8,12 @@ import {
 } from 'react-native';
 import base64 from 'react-native-base64';
 
-import manager from '../files/BLEManagerSingleton';
+import manager from '../bluetooth/BLEManagerSingleton';
+
 
 // service UUID and characteristic UUID for password verification
 const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
 const PASSWORD_CHARACTERISTIC_UUID = '00000601-710e-4a5b-8d75-3e5b444bc3cf';
-
 
 /**
  * A screen containing a text box for password entry and a submit button which begins the process of password verification.

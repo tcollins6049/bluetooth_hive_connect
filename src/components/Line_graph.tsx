@@ -1,25 +1,28 @@
 import React, { useState } from 'react';
-import { View, Dimensions } from 'react-native';
+import { View, Dimensions, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Rect, Text as TextSVG, Svg } from "react-native-svg";
 
+
+/**
+ * Variables used in the line graph
+ */
 interface LineGraphProps {
-    chartData: {
-      labels: string[];
-      datasets: {
-        data: number[];
-      }[];
-    };
-    color_code: string
+  // labels and values displayed in the chart
+  chartData: {
+    labels: string[];
+    datasets: {
+      data: number[];
+    }[];
+  };
+  color_code: string  // What color to make chart
 }
 
 
 /**
  * Given data, creates line graph using that data for points
  * 
- * @param chartData - Contains the labels and there corresponding values for points in the graph
- * @param color_code - Color to make graph
- *  
+ * @param
  * @returns {JSX.Element} Line graph with passed in chartData
  */
 const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
@@ -28,6 +31,7 @@ const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
   return (
     <View>
         {chartData && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <LineChart
             data={chartData}
             width={Dimensions.get('window').width * 0.92}
@@ -54,6 +58,8 @@ const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
                 stroke: '#fae34d',
               },
             }}
+
+            /* Determines when labels are displayed */
             formatXLabel={value => {
               const index = chartData.labels.indexOf(value);
               const data_length = chartData.labels.length;
@@ -90,11 +96,13 @@ const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
                               fontSize="16"
                               fontWeight="bold"
                               textAnchor="middle">
-                              {tooltipPos.value}
+                              {tooltipPos.value.toFixed(2)}
                           </TextSVG>
                   </Svg>
               </View> : null
             }}
+
+            /* Determines what happens when a point on the graph is clicked */
             onDataPointClick={(data) => {
               let isSamePoint = (tooltipPos.x === data.x 
                                   && tooltipPos.y === data.y)
@@ -108,12 +116,13 @@ const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
               })
                   : 
               setTooltipPos({ x: data.x, value: data.value, y: data.y, visible: true });
-          }}
+            }}
           />
+          </ScrollView>
         )}
-      
     </View>
   );
 };
   
+
 export default LineGraph;

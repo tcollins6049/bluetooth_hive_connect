@@ -9,15 +9,17 @@ import {
     TouchableOpacity 
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { DeviceInterface } from '../registered_devices';
 
-import { DeviceInterface } from '../files/devices';
 
-
+/**
+ * Variables for the Scanning Modal
+ */
 interface ScanningModalProps {
-    visible: boolean;
-    foundDevices: DeviceInterface[];
-    onDevicePress: (device: DeviceInterface) => void;
-    onRequestClose: () => void;
+    visible: boolean;   // Determines if the modal is visible
+    foundDevices: DeviceInterface[];    // List of devices found during scan
+    onDevicePress: (device: DeviceInterface) => void;   // Determines what happens when a device is pressed
+    onRequestClose: () => void; // Determines what happens when closing the scanning modal
 }
 
 
@@ -26,11 +28,7 @@ interface ScanningModalProps {
  * If the user presses a device in this list, the application will attempt to connect to that device.
  * If the close button is pressed then scanning is stopped and the modal is closed.
  * 
- * @param   {boolean}   visible Determines if the modal is visible or not
- * @param   {DeviceInterface[]} foundDevices    Array of found devices [deviceId, deviceName] 
- * @param   {}  onDevicePress   Function determining what happens when a device is pressed.
- * @param   {}  onRequestClose  Function determing what happens when close is pressed.
- * 
+ * @param
  * @returns {JSX.Element}   Displays a scanning screen with a list of found devices.
  */
 const ScanningModal: React.FC<ScanningModalProps> = ({ visible, foundDevices, onDevicePress, onRequestClose }) => {
@@ -79,37 +77,12 @@ const ScanningModal: React.FC<ScanningModalProps> = ({ visible, foundDevices, on
 
 
 const styles = StyleSheet.create({
-    modalBackground: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContainer: {
-        width: 300,
-        padding: 20,
-        backgroundColor: 'white',
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    text: {
-        marginTop: 20,
-        fontSize: 18,
-    },
-    stopScanButton: {
-        marginTop: 20,
-        width: '100%',
-        alignItems: 'center',
-    },
-    gradient: {
-        padding: 10,
-        alignItems: 'center',
-        borderRadius: 5,
-    },
-    stopScanButtonText: {
-        color: 'white',
-        fontSize: 18,
-    },
+    modalBackground: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+    modalContainer: { width: 300, padding: 20, backgroundColor: 'white', borderRadius: 10, alignItems: 'center' },
+    text: { marginTop: 20, fontSize: 18 },
+    stopScanButton: { marginTop: 20, width: '100%', alignItems: 'center' },
+    gradient: { padding: 10, alignItems: 'center', borderRadius: 5 },
+    stopScanButtonText: { color: 'white', fontSize: 18 },
     deviceButton: {
         width: '100%',
         paddingVertical: 15,
@@ -118,9 +91,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    deviceText: {
-        fontSize: 18,
-    },
-});
+    deviceText: { fontSize: 18 },
+}); 
+
 
 export default ScanningModal;
