@@ -2,9 +2,9 @@
 
 ## Table of Contents
 - [App_permissions](#App_permissions.tsx)
-  - [requestExternalStoragePermission()](#initialize)
-  - [requestBluetoothPermission()](#connecttodevice)
-  - [requestPermissions()](#disconnect)
+  - [requestExternalStoragePermission()](#requestExternalStoragePermission())
+  - [requestBluetoothPermission()](#requestBluetoothPermission())
+  - [requestPermissions()](#requestPermissions())
 
 
 ## App_permissions.tsx
