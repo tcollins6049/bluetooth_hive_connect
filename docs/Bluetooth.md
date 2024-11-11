@@ -19,3 +19,5 @@ File used to check if the AppMAIS process is currently running. This is used to 
 
   ### **isDuringAppmais()**
   Only method in the file, responsible for checking if the Appmais process is running. Works by converting the *Capture_window_start_time* and current time into seconds since midnight. It then gets the difference between those values and mods that by *capture_interval*.     This tells us where in the current interval we are. We can then use this value and *capture_duration* to determine if Appmais is currently running.
+
+  Example:) If *capture_interval = 300* and 
