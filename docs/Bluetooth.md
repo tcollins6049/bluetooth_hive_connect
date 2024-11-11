@@ -5,7 +5,7 @@
 File used to manage a single instance of the BLEManager. This is needed throughout the application to perform various bluetooth operations.
 
 
-## App_permissions.tsx
+## **App_permissions.tsx**
 File used to request necessary permissions for application from device. The following permissions are requested:
 
   ### **requestExternalStoragePermission()**
