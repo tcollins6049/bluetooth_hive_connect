@@ -11,3 +11,4 @@ Modal goes along with each line graph in the application. Provides a detailed vi
 * Green -- Value pulled directly from Pi
 * Red -- Nan reading pulled from Pi
 * Yellow -- Nan reading pulled from Pi but value was interpolated based on surrounding points.
+Also displays nan count (including interpolated values) and failure count (3 or more nan readings in a row).
