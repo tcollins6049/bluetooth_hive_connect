@@ -9,4 +9,4 @@ File containing header displayed on the password and device detail screens. Head
   Method finds all connected device and then cancels the connection with each of them.
 
 ## **Line_graph.tsx**
-<img src="images/bt_line_graph.jpg" alt="drawing" />
+<img src="images/bt_line_graph.jpg" alt="drawing" width="400"/>
