@@ -19,11 +19,22 @@ File responsible for the password screen in the application. Where the user ente
 
 
 ## **DeviceDetailsScreen.tsx**
+File holding the home page of the application. The methods in this file are responsible for getting data for each of the sensors. The data for this screen comes from the saved sensor files on the Raspberry Pi obtained through the AppMAIS recording process. 
 
-### *processData()*
+### Methods for handling graph data
+#### *get_graph_data()*
 
-### *get_graph_data()*
+#### *processData()*
 
-### *handle_graph_value()*
+#### *handle_graph_value()*
 
-### *readAndParseFileData()*
+
+### Methods for getting sensor and file data
+
+#### *readAndParseFileData()*
+
+#### *processCpuLineData()*
+
+#### *processHumTempLineData()*
+
+#### *processSensorData()*
