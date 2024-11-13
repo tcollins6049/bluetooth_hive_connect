@@ -39,6 +39,18 @@ These arrays hold the data passed into the graph. No nan values can exist in the
 * graph_labels -- Array of labels which will be used for graph creation
 * graph_values -- Array of corresponding values which will be used for graph creation
 
+These arrays are used to hold all data we come across, nan or not. These are not used for graph creation. They are used for the nan modal which shows a more in depth look at the read data. This is so we can see when nan values were read.
+* all_times -- Holds all labels whether they correspond to a nan value or not.
+* all_values -- Holds all values, nan, number, or interpolated.
+
+Variables used to hold the count of nan and failure counts in the read file. A failure is 3 or more nan readings in a row.
+* nanCount
+* failure_count
+
+* nan_occ_count --
+* saved_nan_occs --
+* interpolated_index
+
 
 ### Methods for getting sensor and file data
 
