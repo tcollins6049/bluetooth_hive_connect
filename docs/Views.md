@@ -47,17 +47,18 @@ Variables used to hold the count of nan and failure counts in the read file. A f
 * nanCount
 * failure_count
 
-* nan_occ_count --
-* saved_nan_occs --
-* interpolated_index
+Variables responsible for getting interpolated values. As we go through each line of data in the file, as we run across nan values, we keep track of them with these variables. If we hit a line of data containing an actual value before we get to three nan readings in a row, we are able to interpolate a value for the nan readings. If we don't hit a line of data with an actual value and we get to over 3 nan readings in a row then we add to the failure count. 
+* nan_occ_count -- Number of nan occurences in a row so far
+* saved_nan_occs -- Saved labels of nan occurences
+* interpolated_index -- Indeces of interpolated values.
 
 
 ### Methods for getting sensor and file data
-
 #### *readAndParseFileData()*
+Method responsible for reading most recent data from each sensor on Raspberry Pi. Either gets the most recent value including time of recording, or if the most recent recording is nan, it finds and returns at what time nan values began being recorded.
 
 #### *processCpuLineData()*
+Method called in readAndParseFileData(). Lines of data are different from each sensor so they need to be handled differently. This method is used for handling the data read from the cpu sensor file.
 
 #### *processHumTempLineData()*
-
-#### *processSensorData()*
+Method called in readAndParseFileData(). Lines of data are different from each sensor so they need to be handled differently. This method is used for handling the data read from the humidity and temperature sensor file.
