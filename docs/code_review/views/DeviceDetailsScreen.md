@@ -1,14 +1,14 @@
-## **DeviceDetailsScreen.tsx**
+# **DeviceDetailsScreen.tsx**
 File holding the home page of the application. The methods in this file are responsible for getting data for each of the sensors. The data for this screen comes from the saved sensor files on the Raspberry Pi obtained through the AppMAIS recording process. 
 
-### Methods for handling graph data
-#### *get_graph_data()*
+## Methods for handling graph data
+### *get_graph_data()*
 Acts as the main method for getting data for the line graphs to display. Creates a structure for each sensor to hold the results and calls the processData() function for each sensor.
 
-#### *processData()*
+### *processData()*
 Function works by caling Det_FileRead(), located in a seperate file, to pull sensor data from file on Raspberry Pi. It then loops through each line of data from this file and passes it to handle_graph_value(). 
 
-#### *handle_graph_value()*
+### *handle_graph_value()*
 This function processes the line of data (label, value) that is passed in. In this method, we keep track of a few variables:
 
 This is what makes up the line of data we are processing
@@ -33,11 +33,11 @@ Variables responsible for getting interpolated values. As we go through each lin
 * interpolated_index -- Indeces of interpolated values.
 
 
-### Methods for getting sensor and file data
-#### *readAndParseFileData()*
+## Methods for getting sensor and file data
+### *readAndParseFileData()*
 Method responsible for reading most recent data from each sensor on Raspberry Pi. Either gets the most recent value including time of recording, or if the most recent recording is nan, it finds and returns at what time nan values began being recorded.
 
-#### *processCpuLineData()*
+### *processCpuLineData()*
 Method called in readAndParseFileData(). Lines of data are different from each sensor so they need to be handled differently. This method is used for handling the data read from the cpu sensor file.
 
 #### *processHumTempLineData()*
