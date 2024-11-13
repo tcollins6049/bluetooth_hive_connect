@@ -40,5 +40,15 @@ Method responsible for reading most recent data from each sensor on Raspberry Pi
 ### *processCpuLineData()*
 Method called in readAndParseFileData(). Lines of data are different from each sensor so they need to be handled differently. This method is used for handling the data read from the cpu sensor file.
 
-#### *processHumTempLineData()*
+### *processHumTempLineData()*
 Method called in readAndParseFileData(). Lines of data are different from each sensor so they need to be handled differently. This method is used for handling the data read from the humidity and temperature sensor file.
+
+
+# Det_FileRead.tsx
+## *Det_GraphData()*
+
+## *getChunk()*
+
+## *perform_file_read()*
+
+
