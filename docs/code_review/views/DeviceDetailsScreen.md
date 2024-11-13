@@ -44,11 +44,16 @@ Method called in readAndParseFileData(). Lines of data are different from each s
 Method called in readAndParseFileData(). Lines of data are different from each sensor so they need to be handled differently. This method is used for handling the data read from the humidity and temperature sensor file.
 
 
-# Det_FileRead.tsx
-## *Det_GraphData()*
+# **Det_FileRead.tsx**
+File responsible for pulling a file from the Raspberry Pi. Here we are pulling csv files containing sensor data.
 
-## *getChunk()*
+### *Det_GraphData()*
+The main method of the file. Depending on the sensor we are trying to read, it passes the needed UUID into perform_file_read() and returns the result.
 
-## *perform_file_read()*
+### *perform_file_read()*
+Function responsible for reading data from csv file. The GATT server can only pass so much data at a time so we have to read the file in chunks. This function reads chunks of data from the pi until there are no more chunks to be read. It then appends all of these chunks together forming the original csv file. 
+
+### *getChunk()*
+Function called by perform_file_read(). Reads and returns a chunk of data from the GATT server.
 
 
