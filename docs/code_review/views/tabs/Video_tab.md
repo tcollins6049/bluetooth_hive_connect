@@ -5,6 +5,7 @@ File responsible for functions and data involving camera connected to Raspberry 
 - 'Download Frame': When this is pressed, it pulls a frame from the most recent video and displays it for the user.
 - 'Take picture': There may not be a video still on the Pi. To make sure that the camera is working, the user can press this button. This takes a picture using the camera attached to the pi and then displays it to the user.
 
+<img src="../../../images/bt_video_tab.jpg" alt="drawing" width="400"/>
 
 ## Variables
 Details about important variables before getting into methods.
