@@ -1,6 +1,7 @@
 # **commands.tsx**
 File responsible for screen which is used to send commands from the application to run on the Raspberry Pi. 
 
+<img src="../../../images/bt_command_tab.jpg" alt="drawing" width="400"/>
 
 ## Variables
 More detail about important variables before getting into methods
