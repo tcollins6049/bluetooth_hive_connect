@@ -7,7 +7,7 @@ File responsible for displaying list of modifiable variables from the beemon-con
   
 The app shows two sets of these variables. One set is for the camera and the other set for all the other sensors. This is so that the camera can be set to record at different times than the other sensors.
 
-<img src="../images/bt_modifications_tab.jpg" alt="drawing" width="400"/>
+<img src="../../images/bt_modifications_tab.jpg" alt="drawing" width="400"/>
 
 
 ## Variables
