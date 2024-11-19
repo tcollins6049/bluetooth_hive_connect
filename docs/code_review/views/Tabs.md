@@ -14,9 +14,13 @@ The app shows two sets of these variables. One set is for the camera and the oth
 Method used to read from a characteristic on the Raspberry Pi. Needs the UUID of the characteristic being read from.
 
 ### *writeCharacteristic()*
+Method used to write a given value to a characteristic on the Raspberry Pi. We are using this to change variable values in the beemon-config.ini file.
 
 ### *fetchData()*
+Method which calls readCharacteristic for each variable we want from the beemon-config.ini file. Used to get the current values from the file.
 
 ### *submitChanges()*
+Method which writes new values to variables in the config file. Only writes a value to the config file if the value has been changed.
 
 ### *handleSubmit()*
+Method called when the submit button is pressed. Checks if any variables have been changed to make sure were not needlessly updating variables. If variables have been changed then it shows the 'are you sure' modal. If the user then presses 'yes' then submitChanges() is called to update the variables.
