@@ -20,5 +20,4 @@ Used to set visibility of the AppTimingModal. We don't want to send a command wh
 
 ## Methods
 ### *sendCommand()*
-
-### 
+Method used to send the command entered by the user to the Rasbperry Pi. 
