@@ -3,6 +3,8 @@
 ## **DeviceListScreen.tsx**
 File for the start screen of the application. Displays a list of registered Raspberry Pi's. Can connect to a registered device or scan for unregistered devices.
 
+<img src="../../images/bt_devicelist_screen.jpg" alt="drawing" width="400"/>
+
 ### *connectToDevice()*
 Method responsible for connecting application to Raspberry Pi. This method attempts a connection, if successful it navigates to the password screen. If unsuccessful it calls showRetryAlert(). 
 
