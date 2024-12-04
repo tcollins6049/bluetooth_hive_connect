@@ -21,7 +21,7 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
 - npm
 - React Native CLI
 
-### Steps
+### Steps to get code on your machine
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/tcollins6049/bluetooth_hive_connect.git
@@ -30,6 +30,12 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
    ```bash
    npm install
    npm start
+3. **To assemble build for release (Android):**
+   ```
+   cd android
+   ./gradlew assembleRelease
+   ```
+   After completion, the build will be located in 'android/app/build/outputs/apk/release/app-release.apk'
    
 
 ## Code Structure
