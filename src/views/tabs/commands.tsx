@@ -59,7 +59,7 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
         await manager.writeCharacteristicWithResponseForDevice(
           deviceId,
           SERVICE_UUID,
-          COMMAND_UUID, // Use the correct characteristic UUID
+          COMMAND_UUID,
           encodedCommand
         );
 
@@ -94,14 +94,6 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
 
 
   /**
-   * Called when the Send Command button is pressed. Shows the Are you sure? modal.
-   */
-  const sendCurrentCommand = () => {
-    setIsModalVisible(true);
-  };
-
-
-  /**
    * Called after pressing "Yes" within the Are you sure? modal.
    * Sets the modal visibility to false and sends the user's entered command.
    */
@@ -109,16 +101,6 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
     setIsModalVisible(false);
     await sendCommand(command);
     setCommand("");
-  };
-
-
-  /**
-   * Called after pressing one of the quick commands. Sets the command text within the text box to this quick command.
-   * 
-   * @param {string}  command   The user's entered command
-   */
-  const setQuickCommand = (command: string) => {
-    setCommand(command);
   };
 
 
@@ -156,7 +138,7 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
         <Text style={styles.quickCommandsTitle}>Quick Commands</Text>
         {quickCommands.map((item, index) => (
           <View key={index} style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => setQuickCommand(item.value)}>
+            <TouchableOpacity style={styles.button} onPress={() => setCommand(item.value)}>
               <Text style={styles.buttonText}>{item.label}</Text>
             </TouchableOpacity>
           </View>
@@ -166,7 +148,7 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
       {/* Footer: Contains the Send Command button */}
       <View style={styles.footer}>
         {/*<Button title="Send Command" onPress={sendCurrentCommand} />*/}
-        <TouchableOpacity style={styles.sendButton} onPress={sendCurrentCommand}>
+        <TouchableOpacity style={styles.sendButton} onPress={() => setIsModalVisible(true) }>
             <Text style={styles.sendButtonText}>Send Command</Text>
         </TouchableOpacity>
       </View>

@@ -13,6 +13,7 @@ const CAPT_INTERVAL_UUID = "00000104-710e-4a5b-8d75-3e5b444bc3cf";
  * Used to make sure certain functions are not ran if AppMAIS is currently running.
  * 
  * @param {string}  deviceId  id of connected device
+ * @param {number}  buffer  extra time added to duration to prevent function running at same time as AppMAIS
  * @returns {boolean} True if AppMAIS is running, False if AppMAIS is not running
  */
 const isDuringAppmais = async (deviceId: string, buffer: number): Promise<boolean> => {
@@ -31,7 +32,7 @@ const isDuringAppmais = async (deviceId: string, buffer: number): Promise<boolea
       const intMatch = (base64.decode(videoInt).match(/^\D*(\d+)\D*/));
 
       if (stMatch && edMatch && durMatch && intMatch) { 
-        // Tunrs values from string into int
+        // Turns values from string into int
         const vStart = parseInt(stMatch[1]);
         const vEnd = parseInt(edMatch[1]);
         const vDuration = parseInt(durMatch[1]);

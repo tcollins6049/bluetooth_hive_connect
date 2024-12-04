@@ -65,6 +65,11 @@ const InfoModal: React.FC<InfoModalProps> = ({ isVisible, data, values, interpol
             >
                 <View style={styles.overlay}>
                     <View style={styles.modalContainer}>
+                        {/* Close Button */}
+                        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                            <Text style={styles.closeButtonText}>X</Text>
+                        </TouchableOpacity>
+
                         <Text>Failures: { failures }</Text>
                         <Text>Nan Count: { nan_count }</Text>
                         <DataTable style={styles.container}> 
@@ -76,7 +81,10 @@ const InfoModal: React.FC<InfoModalProps> = ({ isVisible, data, values, interpol
                             </DataTable.Header> 
 
                             {/* Table Contents [dot, label, value] */}
-                            <ScrollView contentContainerStyle={styles.listContainer}>
+                            <ScrollView 
+                                contentContainerStyle={styles.listContainer}
+                                style={{ maxHeight: Dimensions.get('window').height * 0.5 }}
+                            >
                                 {values.map((item, index) => (
                                     <DataTable.Row key={index}> 
                                         <DataTable.Cell><View style={[styles.dot, { backgroundColor: getDotColor(values[index], index) }]} /></DataTable.Cell> 
@@ -87,10 +95,6 @@ const InfoModal: React.FC<InfoModalProps> = ({ isVisible, data, values, interpol
                             </ScrollView>
 
                         </DataTable>
-                        {/* Close Button */}
-                        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                            <Text style={styles.closeButtonText}>Close</Text>
-                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
@@ -120,13 +124,17 @@ const styles = StyleSheet.create({
     },
     listItem: { fontSize: 16, textAlign: 'left', marginLeft: 10 },
     closeButton: {
-        marginTop: 10,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        backgroundColor: '#007bff',
-        borderRadius: 5,
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 1, // Ensure it is above the modal content
+        padding: 5,
     },
-    closeButtonText: { color: '#fff', fontSize: 14 },
+    closeButtonText: {
+        fontSize: 20,
+        color: '#333', // Dark gray color
+        fontWeight: 'bold',
+    },
     dot: { width: 12, height: 12, borderRadius: 6, marginRight: 10, marginTop: -10 },
     container: { padding: 15 }, 
     tableHeader: { backgroundColor: '#DCDCDC' }, 

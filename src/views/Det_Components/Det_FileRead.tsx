@@ -8,6 +8,7 @@ const serviceUUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
 const resetCharacteristicUUID = '00000208-710e-4a5b-8d75-3e5b444bc3cf';
 const CPU_SENSOR_FILE_UUID = '00000211-710e-4a5b-8d75-3e5b444bc3cf';
 const HT_SENSOR_FILE_UUID = '00000212-710e-4a5b-8d75-3e5b444bc3cf';
+const SCALE_SENSOR_FILE_UUID = '00000213-710e-4a5b-8d75-3e5b444bc3cf';
 let deviceId = '';
 
 
@@ -122,6 +123,10 @@ const Det_GraphData = async (device_Id: string, file_type: string) => {
     } else if (file_type === "ht") {
         // Call method to pull entire file of data
         const file_data = await perform_file_read(HT_SENSOR_FILE_UUID);
+        return file_data!.split('\n');
+    } else if (file_type === "scale") {
+        const file_data = await perform_file_read(SCALE_SENSOR_FILE_UUID);
+        console.log("Scale data: ", file_data);
         return file_data!.split('\n');
     }
 

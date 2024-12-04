@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   View, 
   StyleSheet, 
   Text, 
   TouchableOpacity, 
-  ScrollView 
+  ScrollView,
+  Image,
+  Animated
 } from 'react-native';
 import base64 from 'react-native-base64';
 import FlashMessage from "react-native-flash-message";
+import PagerView from 'react-native-pager-view';
+// import { createDrawerNavigator } from '@react-navigation/drawer';
 
+import SideMenu from '../components/SideMenu';
 import manager from '../bluetooth/BLEManagerSingleton';
 import LineGraph from '../components/Line_graph';
 import NanModal from '../modals/NanModal'
@@ -47,9 +52,9 @@ type nanModal = {
 const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, navigation }) => {
   // UUID's for needed characteristics
   const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-  // const cpu_file_UUID = '00000303-710e-4a5b-8d75-3e5b444bc3cf';
   const CPU_LINE_UUID = '00000301-710e-4a5b-8d75-3e5b444bc3cf';
   const HUMIDITY_LINE_UUID = '00000302-710e-4a5b-8d75-3e5b444bc3cf';
+  const SCALE_LINE_UUID = '00000308-710e-4a5b-8d75-3e5b444bc3cf'
   const CPU_SENSOR_UUID = '00000002-710e-4a5b-8d75-3e5b444bc3cf';
   const OFFSET_UUID = '00000305-710e-4a5b-8d75-3e5b444bc3cf';
 
@@ -58,9 +63,11 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
     cpuTemp: 'N/A',
     humidity: 'N/A',
     temp: 'N/A',
+    scale: 'N/A',
     cpuUpdateString: 'N/A',
     humUpdateString: 'N/A',
-    tempUpdateString: 'N/A'
+    tempUpdateString: 'N/A',
+    scaleUpdateString: 'N/A'
   });
 
   // Needed for handling sensor reading
@@ -108,6 +115,15 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
     failureCount: 0
   })
 
+  const [scaleData, setScaleData] = useState<data>({
+    chartData: { labels: [], datasets: [{ data: [0], strokeWidth: 2 }] },
+    allTimes: [],
+    allValues: [],
+    interpolatedIndices: [],
+    nanCount: 0,
+    failureCount: 0
+  })
+
 
   // Use effect, Calls functions to get file and graph data. Updates this data every interval minutes.
   useEffect(() => {
@@ -144,10 +160,23 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
   };
 
 
-  // Newly added function, trying to condense graph reads
+  /**
+   * Used to process data from raspberry pi for each sensor
+   * 
+   * @param deviceId 
+   * @param sensor 
+   * @param graphLabels 
+   * @param graphValues 
+   * @param allLabels 
+   * @param allValues 
+   * @param nanOccurrences 
+   * @param interpolatedIndices 
+   * @param updateData 
+   */
   const processData = async (
     deviceId: string, 
-    sensor: string, 
+    sensor_file: string,
+    sensor: string,
     graphLabels: string[], 
     graphValues: number[], 
     allLabels: string[], 
@@ -156,18 +185,26 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
     interpolatedIndices: number[],
     updateData: Function
   ) => {
-    const data = await Det_FileRead(deviceId, sensor);
+    // Gets sensor data from file on Raspberry Pi.
+    const data = await Det_FileRead(deviceId, sensor_file);
 
     let nanCount = 0;
     let failureCount = 0;
     let nanOccurrenceCount = 0;
 
+    // Iterate through each line of the sensor file
     for (let i = 0; i < data.length; i++) {
         const lineData = data[i];
+        
+        // Extracts label and value from sensor line
         const linePieces = lineData.split(',');
         const label = linePieces[0];
-        const value = linePieces[1];
+        let value = linePieces[1];
+        if (sensor === "humidity") {
+          value = linePieces[2];
+        }
 
+        // Pass label and value into handle_graph_value
         const result = await handle_graph_value(
             label, value, graphLabels, graphValues, allLabels, allValues, 
             nanCount, nanOccurrenceCount, failureCount, nanOccurrences, interpolatedIndices
@@ -186,6 +223,7 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
         }
     }
 
+    // Update data with results of above
     if (graphValues.length > 0) {
         updateData({
             chartData: { labels: graphLabels, datasets: [{ data: graphValues, strokeWidth: 2 }] },
@@ -198,18 +236,25 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
     }
   };
 
+
+  /**
+   * Main function in charge of getting graph data for each sensor.
+   */
   const get_graph_data = async () => {
     await resetOffset();
 
+    // Used to hold the resulting sensor data
     const sensorData = {
         cpu: { labels: [], values: [], allLabels: [], allValues: [], nanOccurrences: [], interpolatedIndices: [] },
         humidity: { labels: [], values: [], allLabels: [], allValues: [], nanOccurrences: [], interpolatedIndices: [] },
-        temperature: { labels: [], values: [], allLabels: [], allValues: [], nanOccurrences: [], interpolatedIndices: [] }
+        temperature: { labels: [], values: [], allLabels: [], allValues: [], nanOccurrences: [], interpolatedIndices: [] },
+        scale: {labels: [], values: [], allLabels: [], allValues: [], nanOccurrences: [], interpolatedIndices: [] }
     };
 
     await processData(
         deviceId, 
-        "cpu", 
+        "cpu",
+        "cpu",
         sensorData.cpu.labels, 
         sensorData.cpu.values, 
         sensorData.cpu.allLabels, 
@@ -222,6 +267,7 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
     await processData(
         deviceId, 
         "ht", 
+        "humidity",
         sensorData.humidity.labels, 
         sensorData.humidity.values, 
         sensorData.humidity.allLabels, 
@@ -234,6 +280,7 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
     await processData(
         deviceId, 
         "ht", 
+        "temperature",
         sensorData.temperature.labels, 
         sensorData.temperature.values, 
         sensorData.temperature.allLabels, 
@@ -242,11 +289,27 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
         sensorData.temperature.interpolatedIndices,
         (data: any) => setTemperatureData(prev => ({ ...prev, ...data }))
     );
+
+    await processData(
+      deviceId,
+      "scale",
+      "scale",
+      sensorData.scale.labels,
+      sensorData.scale.values, 
+      sensorData.scale.allLabels, 
+      sensorData.scale.allValues, 
+      sensorData.scale.nanOccurrences, 
+      sensorData.scale.interpolatedIndices,
+      (data: any) => setScaleData(prev => ({ ...prev, ...data }))
+    );
   };
 
 
   /**
-   * 
+   * Processes line of data (label, value). Updates passed in arrays with data based on value.
+   * If the value is a number then it only updates [graph_labels, graph_values, all_times, all_values].
+   * If the value is null then it depends on the nan_occ_count. If nan_occ_count >= 3 then the value remains null.
+   * If nan_occ_count < 3 then we keep going but increment nan_occ_count, if our next reading is a number then we can interpolate a value.
    * 
    * @param {string}  label Label of the point being processed. (labels are time and date of recording)
    * @param {string}  value value of the point being processed.
@@ -259,7 +322,6 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
    * @param {number}  failure_count Count of failures. (3 or more nan recordings in a row)
    * @param {any} saved_nan_occs  Saved labels of nan occurences.
    * @param {number[]}  interpolated_index  Indeces of interpolated values.
-   * 
    * @returns The updated versions of the passed in variables.
    */
   const handle_graph_value = async (label: string, value: string, graph_labels: any, graph_values: any, all_times: any, all_values: any, 
@@ -405,6 +467,22 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
       }));
     }
 
+    const scaleLineData = await readCharacteristic(SERVICE_UUID, SCALE_LINE_UUID);
+    if (scaleLineData && scaleLineData.value) {
+      let decodedValue = base64.decode(scaleLineData.value);
+      console.log("SCALE: ", decodedValue.split(',')[1])
+
+      // Get CPU file reading
+      const scaleWeight = (decodedValue.split(',')[1]).split('|')[0];
+      const scaleString = ((decodedValue.split(',')[1]).split('|')[1]);
+
+      setFileReadings(prevState => ({
+        ...prevState,
+        scale: scaleWeight,
+        scaleUpdateString: scaleString
+      }));
+    }
+
     const humTempLineData = await readCharacteristic(SERVICE_UUID, HUMIDITY_LINE_UUID);
     if (humTempLineData) {
       processHumTempLineData(humTempLineData);
@@ -541,19 +619,45 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
   }
 
 
+  const refreshScreen = () => {
+    get_graph_data();
+    readAndParseFileData();
+  }
+
+
+  const [isFooterVisible, setIsFooterVisible] = useState(true); // State to toggle footer visibility
+  const slideAnim = useRef(new Animated.Value(0)).current; // Initial position
+
+  // Toggle footer visibility and animate slide
+  const handleFooterToggle = () => {
+    Animated.timing(slideAnim, {
+      toValue: isFooterVisible ? 100 : 0,  // Slide in or out
+      duration: 300,  // Animation duration
+      useNativeDriver: true,  // Use native driver for smoother animation
+    }).start();
+
+    setIsFooterVisible(!isFooterVisible); // Toggle visibility state
+  };
   return (
     <View style={styles.container}>
-      {/* Header: AppMAIS Status */}
+      <SideMenu navigation={navigation} deviceId={deviceId} deviceName={deviceName} />
+
+      {/* Header: Refresh Button */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.deviceButton} onPress={() => get_graph_data()}>
-            <Text style={styles.deviceButtonText}>Refresh</Text>
+        <TouchableOpacity style={styles.refreshButton} onPress={() => refreshScreen()}>
+          <Image
+                source={require('../../assets/images/refresh.png')} // Adjust the path if needed
+                style={styles.icon}
+            />
         </TouchableOpacity>
       </View>
       
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      {/*<ScrollView contentContainerStyle={styles.scrollContainer}>*/}
+      <PagerView style={styles.pagerView} initialPage={0} useNext>
         {/* CPU Data and Graph */}
         {/*<View style={styles.graphSection}>*/}
-        <View style={styles.card}>
+        {/*<View style={styles.card}>*/}
+        <View key="1" style={styles.page}>
           <View style={styles.textContainer}>
             <Text style={styles.sectionTitle}>CPU</Text>
             <Text style={styles.updateDate}>{fileReadings.cpuUpdateString}</Text>
@@ -579,18 +683,25 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
             />
             <FlashMessage duration={4000} />
           </View>
+          <View style={styles.dotsContainer}>
+            <View style={[styles.dot, styles.activeDot]} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+            <View style={styles.dot} /> 
+          </View>
         </View>
 
-        <View style={styles.divider} />
+        {/*<View style={styles.divider} />*/}
 
         {/* Humidity Data and Graph */}
-        <View style={styles.card}>
+        {/*<View style={styles.card}>*/}
+        <View key="2" style={styles.page}>
           <View style={styles.textContainer}>
             <Text style={styles.sectionTitle}>Humidity</Text>
             <Text style={styles.updateDate}>{fileReadings.humUpdateString}</Text>
             <View style={styles.textRow}>
               <View style={styles.textColumn}>
-                <Text style={styles.readingItem}>Most Recent File Reading: {fileReadings.humidity}</Text>
+                <Text style={styles.readingItem}>File: {fileReadings.humidity}</Text>
               </View>
               <TouchableOpacity style={styles.actionButton} onPress={() => handle_nan_ButtonPress(humidityData.allTimes, humidityData.allValues, humidityData.interpolatedIndices, humidityData.failureCount, humidityData.nanCount) }>
                 <View style={styles.buttonContent}>
@@ -609,12 +720,19 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
             />
             <FlashMessage duration={4000} />
           </View>
+          <View style={styles.dotsContainer}>
+            <View style={styles.dot} />
+            <View style={[styles.dot, styles.activeDot]} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+          </View>
         </View>
 
-        <View style={styles.divider} />
+        {/*<View style={styles.divider} />*/}
 
         {/* Temperature Data and Graph */}
-        <View style={styles.card}>
+        {/*<View style={styles.card}>*/}
+        <View key="3" style={styles.page}>
           <View style={styles.textContainer}>
             <Text style={styles.sectionTitle}>Temperature</Text>
             <Text style={styles.updateDate}>{fileReadings.tempUpdateString}</Text>
@@ -638,11 +756,52 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
               color_code={'#47786a'}
             />
           </View>
+          <View style={styles.dotsContainer}>
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+            <View style={[styles.dot, styles.activeDot]} /> 
+            <View style={styles.dot} />
+          </View>
         </View>
-      </ScrollView>
+
+        {/*<View style={styles.card}>*/}
+        <View key="4" style={styles.page}>
+          <View style={styles.textContainer}>
+            <Text style={styles.sectionTitle}>Scale</Text>
+            <Text style={styles.updateDate}>{fileReadings.scaleUpdateString}</Text>
+            <View style={styles.textRow}>
+              <View style={styles.textColumn}>
+                <Text style={styles.readingItem}>File: {fileReadings.scale}</Text>
+              </View>
+              <TouchableOpacity style={styles.actionButton} onPress={() => handle_nan_ButtonPress(scaleData.allTimes, scaleData.allValues, scaleData.interpolatedIndices, scaleData.failureCount, scaleData.nanCount) }>
+                <View style={styles.buttonContent}>
+                  <View style={styles.purpleDot} />
+                  <Text style={styles.actionButtonText}>{ scaleData.failureCount }</Text>
+                  <View style={styles.redDot} />
+                  <Text style={styles.actionButtonText}> { scaleData.nanCount }</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.graphContainer}>
+            <LineGraph
+              chartData={scaleData.chartData}
+              color_code={'#47786a'}
+            />
+            <FlashMessage duration={4000} />
+          </View>
+          <View style={styles.dotsContainer}>
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+            <View style={[styles.dot, styles.activeDot]} /> 
+          </View>
+        </View>
+      {/*</ScrollView>*/}
+      </PagerView>
 
       {/* Footer: Navigation buttons for variable tabs and audio+video tabs */}
-      <View style={styles.footer}>
+      {/*<View style={styles.footer}>
         <TouchableOpacity style={styles.deviceButton} onPress={ () => navigation.navigate('VarScreen', { deviceId: deviceId, deviceName: deviceName})}>
             <Text style={styles.deviceButtonText}>Variables</Text>
         </TouchableOpacity>
@@ -652,7 +811,7 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
         <TouchableOpacity style={styles.deviceButton} onPress={ () => { navigation.navigate('video', { deviceId: deviceId, deviceName: deviceName })} }>
           <Text style={styles.deviceButtonText}>Video</Text>
         </TouchableOpacity>
-      </View>
+      </View>*/}
 
       <NanModal
         isVisible={nan_modal.visible}
@@ -670,14 +829,14 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
 
 const styles = StyleSheet.create({
   scrollContainer: { flexGrow: 1, width: '100%' },
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, padding: 0, backgroundColor: "#f7f9fc" },
   header: {
     height: 60,
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    paddingHorizontal: 10,
+    backgroundColor: '#e0e0e0',
   },
   footer: {
     height: 60,
@@ -686,6 +845,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#ccc',
+    backgroundColor: '#e0e0e0'
   },
   deviceButton: {
     marginTop: 10,
@@ -693,11 +853,21 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginHorizontal: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#e0e0e0',
     alignItems: 'center',
     alignSelf: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
+  },
+  refreshButton: {
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  icon: {
+    width: 36,
+    height: 36,
+    resizeMode: 'contain',
   },
   deviceButtonText: { color: '#000', fontSize: 18, fontWeight: 'bold' },
   indicator: {
@@ -722,17 +892,19 @@ const styles = StyleSheet.create({
   textColumn: { flex: 1 },
   readingItem: { fontSize: 16, color: '#444', marginBottom: 8 },
   actionButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#008B8B',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 5,
   },
-  actionButtonText: { color: '#fff', fontSize: 14 },
+  actionButtonText: { color: '#fff', fontSize: 14, marginRight: 5 },
   graphContainer: {
-    flex: 1,
-    width: '100%',
+    backgroundColor: '#f2f2f2',
+    borderRadius: 10,
+    padding: 10,
     overflow: 'hidden',
     alignSelf: 'center',
+    width: '100%',
   },
   redDot: {
     width: 10,
@@ -752,7 +924,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: '#ccc', marginVertical: 20 },
   headerContainer: { backgroundColor: 'black' },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: '#f2f2f2',
     borderRadius: 15,
     paddingVertical: 20,
     paddingHorizontal: 16,
@@ -761,9 +933,43 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 14,
+    borderWidth: 1,
+    borderColor: '#ddd',
     width: "99%",
     alignSelf: 'center',
-    marginBottom: 20, // Add some space below each card
+    marginBottom: 10, // Add some space below each card
+  },
+
+
+
+  pagerView: {
+    flex: 1,
+  },
+  
+  page: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#f5f5f5',
+  },
+
+
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ddd',
+    marginHorizontal: 5,
+  },
+  activeDot: {
+    backgroundColor: '#333',  // Darker dot for active page
   },
 });
 

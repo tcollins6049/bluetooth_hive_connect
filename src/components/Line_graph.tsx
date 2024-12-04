@@ -28,15 +28,29 @@ interface LineGraphProps {
 const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
   let [tooltipPos, setTooltipPos] = useState({x: 0, y: 0, visible: false, value: 0})
 
+  // Round the data values to the nearest whole number
+  const roundedData = {
+    ...chartData,
+    datasets: chartData.datasets.map(dataset => ({
+      ...dataset,
+      data: dataset.data.map(value => Math.round(value)), // Round each value to the nearest whole number
+    })),
+  };
+
+  const graphWidth = Math.max(
+    Dimensions.get('window').width, // Ensure at least the screen width
+    chartData.labels.length * 20 // Width proportional to the number of points
+  );
+
   return (
     <View>
         {chartData && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <LineChart
-            data={chartData}
-            width={Dimensions.get('window').width * 0.92}
+            data={roundedData}
+            width={graphWidth}
             height={220}
-            fromZero={true}
+            fromZero={false}
             // withVerticalLabels={false}
             yAxisInterval={2}
             withDots={true}
@@ -85,15 +99,17 @@ const LineGraph: React.FC<LineGraphProps> = ({ chartData, color_code }) => {
                       <Rect 
                           x={tooltipPos.x - 15} 
                           y={tooltipPos.y + 10} 
-                          width="60" 
+                          rx="10"
+                          ry="10"
+                          width="80" 
                           height="30"
-                          opacity={.5}
-                          fill="blue" />
+                          opacity={0}
+                          fill="rgba(0, 0, 0, 0.7)" />
                           <TextSVG
                               x={tooltipPos.x + 5}
                               y={tooltipPos.y + 30}
                               fill="white"
-                              fontSize="16"
+                              fontSize="14"
                               fontWeight="bold"
                               textAnchor="middle">
                               {tooltipPos.value.toFixed(2)}

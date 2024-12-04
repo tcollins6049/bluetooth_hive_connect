@@ -5,12 +5,16 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Modal,
+  Dimensions,
+  SafeAreaView
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
+import { DataTable } from 'react-native-paper';
 
 import manager from '../../bluetooth/BLEManagerSingleton';
 import isDuringAppmais from '../../bluetooth/appmaisCheck';
@@ -326,7 +330,6 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
       }
 
       // Save combined chunks to file.
-      console.log("Combined data: ", combinedData);
       if (combinedData.length > 0) { 
         await saveToFile(combinedData, file_name, setImagePath);
         return true;
@@ -364,6 +367,8 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
   // --------------------------- Entropy Graph ----------------------- //
 
   const [video_chartData, set_video_chartData] = useState<any>({ labels: [], datasets: [{ data: [0], strokeWidth: 2 }] }); // useState to hold chart data
+  const [chartLabels, set_chartLabels] = useState<string[]>([]);
+  const [chartValues, set_chartValues] = useState<string[]>([]);
 
   /**
    * Resets the offset of reading the video file sizes csv file.
@@ -423,6 +428,8 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
       // Decode line, if line is "EOF", we have reached the end of the file and are finished.
       if (response && response.value) {
         line_data = base64.decode(response.value)
+      } else {
+        break;
       }
       if (line_data === "EOF" || line_data == null) {
         break;
@@ -430,8 +437,6 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
 
       // Split data into pieces. (parts[0] = date/label, parts[1] = file size/value)
       const data_parts = line_data.split(',');
-      console.log(data_parts[0]);
-      console.log(data_parts[1]);
 
       // Push results onto label and value arrays
       if (data_parts[1] != undefined) {
@@ -442,6 +447,8 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
     }
 
     if (values && values.length > 0) {
+      set_chartLabels(labels);
+      set_chartValues(values.map(String));
       set_video_chartData({ labels: labels, datasets: [{ data: values, strokeWidth: 2 }] });  // Add label and value array data to the chartData
     }
   }
@@ -459,11 +466,6 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
         setLoadModalVisible(true);
         // Get extracted video frame from Pi.
         const result = await fetchFile(SERVICE_UUID, VIDEO_UUID, FRESET_UUID, 'video_frame.jpg', setVideoImagePath);
-        const path = videoImagePath;
-        setVideoImagePath("");
-        setTimeout(() => {
-          setVideoImagePath(path);
-        }, 10);
 
         setLoadModalVisible(false);
         setShowImagePopup(result);
@@ -476,6 +478,11 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
       console.log('Error fetching file:', error);
     }
   };
+
+  const [graphModalVisible, set_graphModalVisible] = useState<boolean>(false);
+  const handle_graph_ButtonPress = () => {
+    set_graphModalVisible(true);
+  }
 
 
   /**
@@ -534,6 +541,7 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
               />
             </View>
           </View>
+          
 
           {/* Footer: Get Frame and Take Picture buttons */}
           <View style={styles.buttonContainer}>
@@ -556,8 +564,64 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
       <LoadingModal
         visible={loadModalVisible}
       />
+
+      <GraphModal
+        visible={graphModalVisible}
+        data={chartLabels}
+        values={chartValues}
+        onClose={ () => set_graphModalVisible(false) }
+      />
     </View>
   )
+};
+
+
+interface ModalProps {
+  visible: boolean;   // Determines if the modal is visible
+  data: string[];   // Graph labels (recording times)
+  values: string[]; // Graph values (Value recorded)
+  onClose: () => void;  // What to do when close is pressed
+}
+const GraphModal: React.FC<ModalProps> = ({ visible, data, values, onClose }) => {
+  return (
+    <Modal
+        visible={visible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={onClose}
+    >
+        <View style={styles.overlay}>
+            <SafeAreaView style={styles.modalContainer}>
+                <DataTable style={styles.container}>
+                    {/* Table Header */}
+                    <DataTable.Header style={styles.tableHeader}>
+                        <DataTable.Title>Time</DataTable.Title>
+                        <DataTable.Title>Value</DataTable.Title>
+                    </DataTable.Header>
+
+                    {/* Table Contents [dot, label, value] */}
+                    <ScrollView contentContainerStyle={styles.listContainer}>
+                        {values.length > 0 && data.length > 0 ? (
+                            values.map((item, index) => (
+                                <DataTable.Row key={index}>
+                                    <DataTable.Cell>{data[index]}</DataTable.Cell>
+                                    <DataTable.Cell>{values[index]}</DataTable.Cell>
+                                </DataTable.Row>
+                            ))
+                        ) : (
+                            <Text>No data available</Text>
+                        )}
+                    </ScrollView>
+                </DataTable>
+
+                {/* Close Button */}
+                <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                    <Text style={styles.closeButtonText}>Close</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
+        </View>
+    </Modal>
+  );
 };
 
 
@@ -660,6 +724,26 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
   },
+
+  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+  modalContainer: {
+      width: Dimensions.get('window').width * 0.8,
+      maxHeight: Dimensions.get('window').height * 0.7, // Adjusted height
+      padding: 20,
+      backgroundColor: '#fff',
+      borderRadius: 10,
+      alignItems: 'center',
+  },
+  listContainer: { marginBottom: 20 },
+  tableHeader: { backgroundColor: '#DCDCDC' },
+  actionButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+  },
+  actionButtonText: { color: '#fff', fontSize: 14 },
+  buttonContent: { flexDirection: 'row', alignItems: 'center' }
 });
   
 export default VideoTab;

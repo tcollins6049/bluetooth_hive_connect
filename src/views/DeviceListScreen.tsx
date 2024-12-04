@@ -69,8 +69,8 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
             // Connect to device and discover services and characteristics attached to device
             // Addon autoConnect: true to make it constantly try reconnecting
-            // await manager.connectToDevice(device.id, { autoConnect: true });
-            await manager.connectToDevice(device.id);
+            await manager.connectToDevice(device.id, { autoConnect: true });
+            // await manager.connectToDevice(device.id);
             await manager.discoverAllServicesAndCharacteristicsForDevice(device.id);
 
             // await new Promise(resolve => setTimeout(resolve, 1000));
@@ -271,5 +271,5 @@ const styles = StyleSheet.create({
     },
 });
 
-export default DeviceListScreen;
 
+export default DeviceListScreen;
