@@ -37,35 +37,37 @@ Below are the important elements of the file structure for the application. For 
 ```
 beemon_bluetooth_project
 │   README.md
-│   App.tsx   
+│   App.tsx
+|   registered_devices.tsx
 │
 └───src
-│   └───files
-│       │   BLEManagerSingleton.ts
+│   └───bluetooth
+│       │   app_permissions.tsx
 │       │   appmaisCheck.tsx
-│       │   devices.tsx
-│   └───modals
+│       │   BLEManagerSingleton.ts
+|   └───components
 |       |   CustomHeader.tsx
+|       |   Line_graph.tsx
+|       |   SideMenu.tsx
+│   └───modals
+|       |   AppTimingModal.tsx
+|       |   ConnectingModal.tsx
+|       |   LoadingModal.tsx
+|       |   NanModal.tsx
 |       |   ScanningModal.tsx
-|       |   StatusModal.tsx
-|       |   connectingModal.tsx
 │   └───views
 |       └───navigation
-|       |       |   AudVidScreen.tsx
 |       |       |   VarScreen.tsx
 |       └───tabs
 |       |       |   audio_tab.tsx
 |       |       |   commands.tsx
-|       |       |   data.tsx
 |       |       |   modifications.tsx
 |       |       |   sensors.tsx
 |       |       |   video_tab.tsx
 |       |   DeviceDetailsScreen.tsx
 |       |   DeviceListScreen.tsx
 |       |   PasswordScreen.tsx
-│   
-└───docs
-    │   
+ 
 ```
 
 ## Extending the Application
