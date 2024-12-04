@@ -21,7 +21,7 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
 - npm
 - React Native CLI
 
-### Steps
+### Steps to get code on your machine
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/tcollins6049/bluetooth_hive_connect.git
@@ -30,25 +30,37 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
    ```bash
    npm install
    npm start
+3. **To assemble build for release (Android):**
+   ```
+   cd android
+   ./gradlew assembleRelease
+   ```
+   After completion, the build will be located in 'android/app/build/outputs/apk/release/app-release.apk'
    
 
 ## Code Structure
-Below are the important elements of the file structure for the application. For detailed descriptions on each file, view code_structure.md in the docs folder.
+Below are the important elements of the file structure for the application. For detailed descriptions on each file, view code_review directory in the docs folder.
 ```
 beemon_bluetooth_project
 │   README.md
-│   App.tsx   
+│   App.tsx
+|   registered_devices.tsx
 │
 └───src
-│   └───files
-│       │   BLEManagerSingleton.ts
+│   └───bluetooth
+│       │   app_permissions.tsx
 │       │   appmaisCheck.tsx
-│       │   devices.tsx
-│   └───modals
+│       │   BLEManagerSingleton.ts
+|   └───components
 |       |   CustomHeader.tsx
+|       |   Line_graph.tsx
+|       |   SideMenu.tsx
+│   └───modals
+|       |   AppTimingModal.tsx
+|       |   ConnectingModal.tsx
+|       |   LoadingModal.tsx
+|       |   NanModal.tsx
 |       |   ScanningModal.tsx
-|       |   StatusModal.tsx
-|       |   connectingModal.tsx
 │   └───views
 |       └───navigation
 |       |       |   VarScreen.tsx
@@ -61,9 +73,7 @@ beemon_bluetooth_project
 |       |   DeviceDetailsScreen.tsx
 |       |   DeviceListScreen.tsx
 |       |   PasswordScreen.tsx
-│   
-└───docs
-    │   
+ 
 ```
 
 ## Extending the Application
