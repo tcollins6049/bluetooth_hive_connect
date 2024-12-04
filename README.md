@@ -51,12 +51,10 @@ beemon_bluetooth_project
 |       |   connectingModal.tsx
 │   └───views
 |       └───navigation
-|       |       |   AudVidScreen.tsx
 |       |       |   VarScreen.tsx
 |       └───tabs
 |       |       |   audio_tab.tsx
 |       |       |   commands.tsx
-|       |       |   data.tsx
 |       |       |   modifications.tsx
 |       |       |   sensors.tsx
 |       |       |   video_tab.tsx
