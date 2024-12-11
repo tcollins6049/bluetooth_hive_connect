@@ -8,11 +8,11 @@ import {
     FlatList 
 } from 'react-native';
 
-import manager from '../bluetooth/BLEManagerSingleton.ts';
-import ConnectingModal from '../modals/ConnectingModal.tsx';
-import ScanningModal from '../modals/ScanningModal.tsx';
-import reg_devices, { DeviceInterface } from '../registered_devices.tsx';
-import requestPermissions from '../bluetooth/app_permissions.tsx';
+import manager from '../bluetooth/BLEManagerSingleton';
+import ConnectingModal from '../modals/ConnectingModal';
+import ScanningModal from '../modals/ScanningModal';
+import reg_devices, { DeviceInterface } from '../registered_devices';
+import requestPermissions from '../bluetooth/app_permissions';
 
 
 /**
