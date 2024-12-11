@@ -8,11 +8,11 @@ import {
     FlatList 
 } from 'react-native';
 
-import manager from '../bluetooth/BLEManagerSingleton';
-import ConnectingModal from '../modals/ConnectingModal';
-import ScanningModal from '../modals/ScanningModal';
-import registered_devices, { DeviceInterface } from '../registered_devices';
-import requestPermissions from '../bluetooth/app_permissions';
+import manager from '../bluetooth/BLEManagerSingleton.ts';
+import ConnectingModal from '../modals/ConnectingModal.tsx';
+import ScanningModal from '../modals/ScanningModal.tsx';
+import reg_devices, { DeviceInterface } from '../registered_devices.tsx';
+import requestPermissions from '../bluetooth/app_permissions.tsx';
 
 
 /**
@@ -196,7 +196,7 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
             {/* List of registered devices */}
             <FlatList
-                data={registered_devices}
+                data={reg_devices}
                 keyExtractor={item => item.id.toString()}
                 renderItem={renderItem}
             />

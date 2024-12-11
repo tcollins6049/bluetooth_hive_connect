@@ -78,6 +78,13 @@ beemon_bluetooth_project
 
 ## Extending the Application
 ### 1. Adding a new sensor
+- Add characteristic for new sensor in GATT server.
+- Det_FileRead:
+   - Add characteristic UUID for new sensor at top of file.
+   - In function Det_GraphData, add else if for new specific sensor.
+- DeviceDetailsScreen.tsx:
+   - Update get_graph_data() with new sensor.
+   - 
 
 ### 2. Changing Password
 

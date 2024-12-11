@@ -5,7 +5,7 @@ export interface DeviceInterface {
 }
 
 // List of registered devices.
-const devices: DeviceInterface[] = [
+const reg_devices: DeviceInterface[] = [
     { id: 'E4:5F:01:5F:AF:73', name: 'rpi4-60' },
     { id: 'D8:3A:DD:75:8C:25', name: 'rpi4-30' },
     // { id: 'E4:5F:01:5F:AF:73', name: 'rpi4-30' },
@@ -16,4 +16,4 @@ const devices: DeviceInterface[] = [
 ];
 
 
-export default devices;
+export default reg_devices;
