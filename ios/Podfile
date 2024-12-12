@@ -23,6 +23,12 @@ target 'bluetooth_hive_connect' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  permissions_path = '../node_modules/react-native-permissions/ios'
+
+  pod 'Permission-Bluetooth', :path => "#{permissions_path}/Bluetooth"
+  pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary"
+  pod 'Permission-LocationWhenInUse', :path => "#{permissions_path}/LocationWhenInUse"
+
   target 'bluetooth_hive_connectTests' do
     inherit! :complete
     # Pods for testing
