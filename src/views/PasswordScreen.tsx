@@ -9,11 +9,12 @@ import {
 import base64 from 'react-native-base64';
 
 import manager from '../bluetooth/BLEManagerSingleton';
+import { UUIDS } from '../constants';
 
 
 // service UUID and characteristic UUID for password verification
-const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
-const PASSWORD_CHARACTERISTIC_UUID = '00000601-710e-4a5b-8d75-3e5b444bc3cf';
+// const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
+// const PASSWORD_CHARACTERISTIC_UUID = '00000601-710e-4a5b-8d75-3e5b444bc3cf';
 
 /**
  * A screen containing a text box for password entry and a submit button which begins the process of password verification.
@@ -39,10 +40,10 @@ const PasswordScreen: React.FC<{ route: any, navigation: any }> = ({ route, navi
     try {
       // Takes password from text box and writes it to the connected device.
       const password_64 = base64.encode(password);
-      await manager.writeCharacteristicWithResponseForDevice(deviceId, SERVICE_UUID, PASSWORD_CHARACTERISTIC_UUID, password_64);
+      await manager.writeCharacteristicWithResponseForDevice(deviceId, UUIDS.SERVICE, UUIDS.PW_CHAR, password_64);
 
       // Read returned value from device.
-      const characteristic = await manager.readCharacteristicForDevice(deviceId, SERVICE_UUID, PASSWORD_CHARACTERISTIC_UUID);
+      const characteristic = await manager.readCharacteristicForDevice(deviceId, UUIDS.SERVICE, UUIDS.PW_CHAR);
       let responseValue = '0';
       if (characteristic.value) responseValue = base64.decode(characteristic.value);
 

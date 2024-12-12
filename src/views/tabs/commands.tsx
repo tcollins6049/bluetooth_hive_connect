@@ -14,6 +14,7 @@ import base64 from 'react-native-base64';
 import manager from '../../bluetooth/BLEManagerSingleton';
 import isDuringAppmais from '../../bluetooth/appmaisCheck';
 import AppTimingModal from '../../modals/AppTimingModal';
+import { UUIDS } from '../../constants';
 
 
 /**
@@ -26,8 +27,8 @@ import AppTimingModal from '../../modals/AppTimingModal';
  */
 const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
   // Service UUID and Command charcteristic UUID
-  const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
-  const COMMAND_UUID = "00000501-710e-4a5b-8d75-3e5b444bc3cf";
+  // const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
+  // const COMMAND_UUID = "00000501-710e-4a5b-8d75-3e5b444bc3cf";
 
   const [error, setError] = useState<string | null>(null);
   const [command, setCommand] = useState<string>('');
@@ -58,8 +59,8 @@ const CommandsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ devic
         // Write the command to the characteristic
         await manager.writeCharacteristicWithResponseForDevice(
           deviceId,
-          SERVICE_UUID,
-          COMMAND_UUID,
+          UUIDS.SERVICE,
+          UUIDS.COMMAND_CHAR,
           encodedCommand
         );
 

@@ -13,6 +13,7 @@ import ConnectingModal from '../modals/ConnectingModal';
 import ScanningModal from '../modals/ScanningModal';
 import reg_devices, { DeviceInterface } from '../registered_devices';
 import requestPermissions from '../bluetooth/app_permissions';
+import { UUIDS } from '../constants';
 
 
 /**
@@ -136,7 +137,7 @@ const DeviceListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
         // Services being scanned for. So the scan doesn't pick up devices other than Raspberry Pi's.
         const services = [
-            '00000001-710e-4a5b-8d75-3e5b444bc3cf'
+            UUIDS.SERVICE
         ];
 
         // Scan for devices advertising services in the services array.

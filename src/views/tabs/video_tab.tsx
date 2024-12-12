@@ -21,6 +21,7 @@ import isDuringAppmais from '../../bluetooth/appmaisCheck';
 import LineGraph from '../../components/Line_graph';
 import AppTimingModal from '../../modals/AppTimingModal';
 import LoadingModal from '../../modals/LoadingModal';
+import { UUIDS } from '../../constants';
 
 
 /**
@@ -35,14 +36,14 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
   const { deviceId, deviceName } = route.params;
   
   // Service UUID and UUID's for characteristics used on this screen.
-  const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-  const VIDEO_FILE_INFO_UUID = '00000202-710e-4a5b-8d75-3e5b444bc3cf';
-  const VIDEO_UUID = '00000203-710e-4a5b-8d75-3e5b444bc3cf';
+  // const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+  // const VIDEO_FILE_INFO_UUID = '00000202-710e-4a5b-8d75-3e5b444bc3cf';
+  // const VIDEO_UUID = '00000203-710e-4a5b-8d75-3e5b444bc3cf';
   const FRESET_UUID = '00000204-710e-4a5b-8d75-3e5b444bc3cf';
-  const STATIC_UUID = '00000207-710e-4a5b-8d75-3e5b444bc3cf';
+  // const STATIC_UUID = '00000207-710e-4a5b-8d75-3e5b444bc3cf';
   const SRESET_UUID = '00000208-710e-4a5b-8d75-3e5b444bc3cf';
-  const COMMAND_UUID = '00000501-710e-4a5b-8d75-3e5b444bc3cf';
-  const VIDEO_LINE_UUID = '00000209-710e-4a5b-8d75-3e5b444bc3cf';
+  // const COMMAND_UUID = '00000501-710e-4a5b-8d75-3e5b444bc3cf';
+  // const VIDEO_LINE_UUID = '00000209-710e-4a5b-8d75-3e5b444bc3cf';
 
   const [videoImagePath, setVideoImagePath] = useState(''); // Holds the path of the extracted frame
   const [pictureImagePath, setPictureImagePath] = useState(''); // Holds the path of picture after it is taken
@@ -65,7 +66,7 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
 
       const initial = async () => {
         // Fetch the file when the tab is focused
-        await readFileInfoCharacteristic(SERVICE_UUID, VIDEO_FILE_INFO_UUID);
+        await readFileInfoCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_FILE_INFO_CHAR);
         await get_cpu_graph_data();
       }
 
@@ -183,7 +184,7 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
         await new Promise(resolve => setTimeout(resolve, 5000));
 
         // Get picture from Pi.
-        const result = await fetchFile(SERVICE_UUID, STATIC_UUID, SRESET_UUID, 'hive_picture.jpg', setPictureImagePath);
+        const result = await fetchFile(UUIDS.SERVICE, UUIDS.STATIC_READ_CHAR, SRESET_UUID, 'hive_picture.jpg', setPictureImagePath);
 
         setLoadModalVisible(false);
         setShowPicturePopup(result);
@@ -211,8 +212,8 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
       // Write the command to the characteristic
       await manager.writeCharacteristicWithResponseForDevice(
         deviceId,
-        SERVICE_UUID,
-        COMMAND_UUID,
+        UUIDS.SERVICE,
+        UUIDS.COMMAND_CHAR,
         encodedCommand
       );
 
@@ -378,7 +379,7 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
     try {
       await manager.writeCharacteristicWithResponseForDevice(
         deviceId,
-        SERVICE_UUID,
+        UUIDS.SERVICE,
         '00000210-710e-4a5b-8d75-3e5b444bc3cf',
         base64.encode('reset')
       );
@@ -423,7 +424,7 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
 
     let line_data = null;
     while (true) {
-      const response = await readCharacteristic(SERVICE_UUID, VIDEO_LINE_UUID) // Read line from file
+      const response = await readCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_LINE_CHAR) // Read line from file
 
       // Decode line, if line is "EOF", we have reached the end of the file and are finished.
       if (response && response.value) {
@@ -465,7 +466,7 @@ const VideoTab: React.FC<{ route: any }> = ({ route }) => {
       if (!(await isDuringAppmais(deviceId, 5))) {
         setLoadModalVisible(true);
         // Get extracted video frame from Pi.
-        const result = await fetchFile(SERVICE_UUID, VIDEO_UUID, FRESET_UUID, 'video_frame.jpg', setVideoImagePath);
+        const result = await fetchFile(UUIDS.SERVICE, UUIDS.FRAME_CHAR, FRESET_UUID, 'video_frame.jpg', setVideoImagePath);
 
         setLoadModalVisible(false);
         setShowImagePopup(result);

@@ -18,6 +18,7 @@ import manager from '../bluetooth/BLEManagerSingleton';
 import LineGraph from '../components/Line_graph';
 import NanModal from '../modals/NanModal'
 import Det_FileRead from './Det_Components/Det_FileRead';
+import { UUIDS } from '../constants';
 
 
 type data = {
@@ -51,12 +52,12 @@ type nanModal = {
  */
 const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, navigation }) => {
   // UUID's for needed characteristics
-  const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-  const CPU_LINE_UUID = '00000301-710e-4a5b-8d75-3e5b444bc3cf';
-  const HUMIDITY_LINE_UUID = '00000302-710e-4a5b-8d75-3e5b444bc3cf';
-  const SCALE_LINE_UUID = '00000308-710e-4a5b-8d75-3e5b444bc3cf'
-  const CPU_SENSOR_UUID = '00000002-710e-4a5b-8d75-3e5b444bc3cf';
-  const OFFSET_UUID = '00000305-710e-4a5b-8d75-3e5b444bc3cf';
+  // const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+  // const CPU_LINE_UUID = '00000301-710e-4a5b-8d75-3e5b444bc3cf';
+  // const HUMIDITY_LINE_UUID = '00000302-710e-4a5b-8d75-3e5b444bc3cf';
+  // const SCALE_LINE_UUID = '00000308-710e-4a5b-8d75-3e5b444bc3cf'
+  // const CPU_SENSOR_UUID = '00000002-710e-4a5b-8d75-3e5b444bc3cf';
+  // const OFFSET_UUID = '00000305-710e-4a5b-8d75-3e5b444bc3cf';
 
   // Variables needed for handling file readings
   const [fileReadings, setFileReadings] = useState({
@@ -148,8 +149,8 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
     try {
         await manager.writeCharacteristicWithResponseForDevice(
             deviceId,
-            SERVICE_UUID,
-            OFFSET_UUID,
+            UUIDS.SERVICE,
+            UUIDS.OFFSET_CHAR,
             base64.encode('reset')
         );
 
@@ -456,7 +457,7 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
    */
   const readAndParseFileData = async () => {
     // Pulls data from file and sensor
-    const cpuLineData = await readCharacteristic(SERVICE_UUID, CPU_LINE_UUID);
+    const cpuLineData = await readCharacteristic(UUIDS.SERVICE, UUIDS.CPU_LINE_CHAR);
     if (cpuLineData) {
       processCpuLineData(cpuLineData);
     } else {
@@ -467,7 +468,7 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
       }));
     }
 
-    const scaleLineData = await readCharacteristic(SERVICE_UUID, SCALE_LINE_UUID);
+    const scaleLineData = await readCharacteristic(UUIDS.SERVICE, UUIDS.SCALE_LINE_CHAR);
     if (scaleLineData && scaleLineData.value) {
       let decodedValue = base64.decode(scaleLineData.value);
       console.log("SCALE: ", decodedValue.split(',')[1])
@@ -483,7 +484,7 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
       }));
     }
 
-    const humTempLineData = await readCharacteristic(SERVICE_UUID, HUMIDITY_LINE_UUID);
+    const humTempLineData = await readCharacteristic(UUIDS.SERVICE, UUIDS.HUMIDITY_LINE_CHAR);
     if (humTempLineData) {
       processHumTempLineData(humTempLineData);
     } else {
@@ -496,7 +497,7 @@ const DeviceDetailScreen: React.FC<{ route: any, navigation: any }> = ({ route, 
       }))
     }
 
-    const sensorData = await readCharacteristic(SERVICE_UUID, CPU_SENSOR_UUID);
+    const sensorData = await readCharacteristic(UUIDS.SERVICE, UUIDS.CPU_SENSOR_CHAR);
     if (sensorData) {
       processSensorData(sensorData);
     } else {

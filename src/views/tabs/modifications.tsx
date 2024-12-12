@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
 
 import manager from '../../bluetooth/BLEManagerSingleton';
+import { UUIDS } from '../../constants';
 
 
 /**
@@ -24,15 +25,15 @@ import manager from '../../bluetooth/BLEManagerSingleton';
  */
 const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
   // The service UUID and UUID's for all characteristics accessed in this file.
-  const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
-  const START_TIME_UUID = '00000101-710e-4a5b-8d75-3e5b444bc3cf';
-  const END_TIME_UUID = '00000102-710e-4a5b-8d75-3e5b444bc3cf';
-  const DURATION_UUID = '00000103-710e-4a5b-8d75-3e5b444bc3cf';
-  const INTERVAL_UUID = '00000104-710e-4a5b-8d75-3e5b444bc3cf';
-  const VIDEO_START_TIME_UUID = '00000105-710e-4a5b-8d75-3e5b444bc3cf';
-  const VIDEO_END_TIME_UUID = '00000106-710e-4a5b-8d75-3e5b444bc3cf';
-  const VIDEO_DURATION_UUID = '00000107-710e-4a5b-8d75-3e5b444bc3cf';
-  const VIDEO_INTERVAL_UUID = '00000108-710e-4a5b-8d75-3e5b444bc3cf';
+  // const SERVICE_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf";
+  // const START_TIME_UUID = '00000101-710e-4a5b-8d75-3e5b444bc3cf';
+  // const END_TIME_UUID = '00000102-710e-4a5b-8d75-3e5b444bc3cf';
+  // const DURATION_UUID = '00000103-710e-4a5b-8d75-3e5b444bc3cf';
+  // const INTERVAL_UUID = '00000104-710e-4a5b-8d75-3e5b444bc3cf';
+  // const VIDEO_START_TIME_UUID = '00000105-710e-4a5b-8d75-3e5b444bc3cf';
+  // const VIDEO_END_TIME_UUID = '00000106-710e-4a5b-8d75-3e5b444bc3cf';
+  // const VIDEO_DURATION_UUID = '00000107-710e-4a5b-8d75-3e5b444bc3cf';
+  // const VIDEO_INTERVAL_UUID = '00000108-710e-4a5b-8d75-3e5b444bc3cf';
 
   // Define variables for each value we are accessing in the config file.
   type VariablesType = {
@@ -214,29 +215,29 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
    */
   const submitChanges = () => {
     if (variables.capture_window_start_time !== originalVariables.capture_window_start_time) {  // capture_window_start_time
-      writeCharacteristic(SERVICE_UUID, START_TIME_UUID, 'capture_window_start_time');
+      writeCharacteristic(UUIDS.SERVICE, UUIDS.START_CHAR, 'capture_window_start_time');
     }
     if (variables.capture_window_end_time !== originalVariables.capture_window_end_time) {  // capture_window_end_time
-      writeCharacteristic(SERVICE_UUID, END_TIME_UUID, 'capture_window_end_time');
+      writeCharacteristic(UUIDS.SERVICE, UUIDS.END_CHAR, 'capture_window_end_time');
     }
     if (variables.capture_duration_seconds !== originalVariables.capture_duration_seconds) {  // capture_duration_seconds
-      writeCharacteristic(SERVICE_UUID, DURATION_UUID, 'capture_duration_seconds');
+      writeCharacteristic(UUIDS.SERVICE, UUIDS.DURATION_CHAR, 'capture_duration_seconds');
     }
     if (variables.capture_interval_seconds !== originalVariables.capture_interval_seconds) {  // capture_interval_seconds
-      writeCharacteristic(SERVICE_UUID, INTERVAL_UUID, 'capture_interval_seconds');
+      writeCharacteristic(UUIDS.SERVICE, UUIDS.INTERVAL_CHAR, 'capture_interval_seconds');
     }
 
     if (variables.v_capture_window_start_time !== originalVariables.v_capture_window_start_time) {  // capture_interval_seconds
-      writeCharacteristic(SERVICE_UUID, VIDEO_START_TIME_UUID, 'v_capture_window_start_time');
+      writeCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_START_CHAR, 'v_capture_window_start_time');
     }
     if (variables.v_capture_window_end_time !== originalVariables.v_capture_window_end_time) {  // capture_interval_seconds
-      writeCharacteristic(SERVICE_UUID, VIDEO_END_TIME_UUID, 'v_capture_window_end_time');
+      writeCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_END_CHAR, 'v_capture_window_end_time');
     }
     if (variables.v_capture_duration_seconds !== originalVariables.v_capture_duration_seconds) {  // capture_interval_seconds
-      writeCharacteristic(SERVICE_UUID, VIDEO_DURATION_UUID, 'v_capture_duration_seconds');
+      writeCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_DURATION_CHAR, 'v_capture_duration_seconds');
     }
     if (variables.v_capture_interval_seconds !== originalVariables.v_capture_interval_seconds) {  // capture_interval_seconds
-      writeCharacteristic(SERVICE_UUID, VIDEO_INTERVAL_UUID, 'v_capture_interval_seconds');
+      writeCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_INTERVAL_CHAR, 'v_capture_interval_seconds');
     }
 
     console.log("Variables updated successfully.");
@@ -250,16 +251,16 @@ const ModificationsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ 
    */
   const fetchData = async () => {
     // The following variables are for every sensor besides video
-    await readCharacteristic(SERVICE_UUID, START_TIME_UUID, 'capture_window_start_time'); // Read for capture_window_start_time             
-    await readCharacteristic(SERVICE_UUID, END_TIME_UUID, 'capture_window_end_time'); // Read for capture_window_end_time 
-    await readCharacteristic(SERVICE_UUID, DURATION_UUID, 'capture_duration_seconds');  // Read for capture_duration_seconds
-    await readCharacteristic(SERVICE_UUID, INTERVAL_UUID, 'capture_interval_seconds');  // Read for capture_interval_seconds
+    await readCharacteristic(UUIDS.SERVICE, UUIDS.START_CHAR, 'capture_window_start_time'); // Read for capture_window_start_time             
+    await readCharacteristic(UUIDS.SERVICE, UUIDS.END_CHAR, 'capture_window_end_time'); // Read for capture_window_end_time 
+    await readCharacteristic(UUIDS.SERVICE, UUIDS.DURATION_CHAR, 'capture_duration_seconds');  // Read for capture_duration_seconds
+    await readCharacteristic(UUIDS.SERVICE, UUIDS.INTERVAL_CHAR, 'capture_interval_seconds');  // Read for capture_interval_seconds
 
     // The following variables are only for video 
-    await readCharacteristic(SERVICE_UUID, VIDEO_START_TIME_UUID, 'v_capture_window_start_time'); // Read for capture_window_start_time             
-    await readCharacteristic(SERVICE_UUID, VIDEO_END_TIME_UUID, 'v_capture_window_end_time'); // Read for capture_window_end_time 
-    await readCharacteristic(SERVICE_UUID, VIDEO_DURATION_UUID, 'v_capture_duration_seconds');  // Read for capture_duration_seconds
-    await readCharacteristic(SERVICE_UUID, VIDEO_INTERVAL_UUID, 'v_capture_interval_seconds');  // Read for capture_interval_seconds
+    await readCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_START_CHAR, 'v_capture_window_start_time'); // Read for capture_window_start_time             
+    await readCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_END_CHAR, 'v_capture_window_end_time'); // Read for capture_window_end_time 
+    await readCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_DURATION_CHAR, 'v_capture_duration_seconds');  // Read for capture_duration_seconds
+    await readCharacteristic(UUIDS.SERVICE, UUIDS.VIDEO_INTERVAL_CHAR, 'v_capture_interval_seconds');  // Read for capture_interval_seconds
   };
 
 

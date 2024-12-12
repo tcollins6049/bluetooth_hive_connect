@@ -1,12 +1,13 @@
 import base64 from 'react-native-base64';
 import manager from '../bluetooth/BLEManagerSingleton';
+import { UUIDS } from '../constants';
 
 
-const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-const CAPT_WINDOW_START_TIME_UUID = "00000101-710e-4a5b-8d75-3e5b444bc3cf";
-const CAPT_WINDOW_END_TIME_UUID = "00000102-710e-4a5b-8d75-3e5b444bc3cf";
-const CAPT_DURATION_UUID = "00000103-710e-4a5b-8d75-3e5b444bc3cf";
-const CAPT_INTERVAL_UUID = "00000104-710e-4a5b-8d75-3e5b444bc3cf";
+// const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+// const CAPT_WINDOW_START_TIME_UUID = "00000101-710e-4a5b-8d75-3e5b444bc3cf";
+// const CAPT_WINDOW_END_TIME_UUID = "00000102-710e-4a5b-8d75-3e5b444bc3cf";
+// const CAPT_DURATION_UUID = "00000103-710e-4a5b-8d75-3e5b444bc3cf";
+// const CAPT_INTERVAL_UUID = "00000104-710e-4a5b-8d75-3e5b444bc3cf";
 
 /**
  * Determines if the AppMAIS process is currently running or not.
@@ -18,10 +19,10 @@ const CAPT_INTERVAL_UUID = "00000104-710e-4a5b-8d75-3e5b444bc3cf";
  */
 const isDuringAppmais = async (deviceId: string, buffer: number): Promise<boolean> => {
     // Get needed variables to determine this. [start, end, duration, and interval]
-    const videoStart = (await manager.readCharacteristicForDevice(deviceId, SERVICE_UUID, CAPT_WINDOW_START_TIME_UUID)).value;
-    const videoEnd = (await manager.readCharacteristicForDevice(deviceId, SERVICE_UUID, CAPT_WINDOW_END_TIME_UUID)).value;
-    const videoDur = (await manager.readCharacteristicForDevice(deviceId, SERVICE_UUID, CAPT_DURATION_UUID)).value;
-    const videoInt = (await manager.readCharacteristicForDevice(deviceId, SERVICE_UUID, CAPT_INTERVAL_UUID)).value;
+    const videoStart = (await manager.readCharacteristicForDevice(deviceId, UUIDS.SERVICE, UUIDS.START_CHAR)).value;
+    const videoEnd = (await manager.readCharacteristicForDevice(deviceId, UUIDS.SERVICE, UUIDS.END_CHAR)).value;
+    const videoDur = (await manager.readCharacteristicForDevice(deviceId, UUIDS.SERVICE, UUIDS.DURATION_CHAR)).value;
+    const videoInt = (await manager.readCharacteristicForDevice(deviceId, UUIDS.SERVICE, UUIDS.INTERVAL_CHAR)).value;
     // const buffer = 5;
 
     if (videoStart && videoEnd && videoDur && videoInt) {

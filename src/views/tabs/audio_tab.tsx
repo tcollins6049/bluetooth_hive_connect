@@ -15,6 +15,7 @@ import { Buffer } from 'buffer';
 
 import manager from '../../bluetooth/BLEManagerSingleton';
 import isDuringAppmais from '../../bluetooth/appmaisCheck';
+import { UUIDS } from '../../constants';
 
 
 /**
@@ -27,11 +28,11 @@ import isDuringAppmais from '../../bluetooth/appmaisCheck';
 const AudioTab: React.FC<{ route: any }> = ({ route }) => {
   const { deviceId, deviceName } = route.params;
 
-  const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-  const AUDIO_FILE_INFO_UUID = '00000201-710e-4a5b-8d75-3e5b444bc3cf';
+  // const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+  // const AUDIO_FILE_INFO_UUID = '00000201-710e-4a5b-8d75-3e5b444bc3cf';
 
-  const AUDIO_UUID = '00000205-710e-4a5b-8d75-3e5b444bc3cf';
-  const FRESET_UUID = '00000204-710e-4a5b-8d75-3e5b444bc3cf';
+  // const AUDIO_UUID = '00000205-710e-4a5b-8d75-3e5b444bc3cf';
+  // const FRESET_UUID = '00000204-710e-4a5b-8d75-3e5b444bc3cf';
 
   const [wavImagePath, setWavImagePath] = useState('');
 
@@ -47,7 +48,7 @@ const AudioTab: React.FC<{ route: any }> = ({ route }) => {
 
       const initial = async () => {
         // Fetch the file when the tab is focused
-        await readFileInfoCharacteristic(SERVICE_UUID, AUDIO_FILE_INFO_UUID);
+        await readFileInfoCharacteristic(UUIDS.SERVICE, UUIDS.AUDIO_INFO_CHAR);
 
         isDuringAppmais(deviceId, 5);
       }
@@ -85,8 +86,6 @@ const AudioTab: React.FC<{ route: any }> = ({ route }) => {
           formatFileSize(decoded_mp3_size, setMp3FileSize);
           set_rms_level(decodedValue.split(', ')[3]);
           setSilence(decodedValue.split(', ')[4]);
-          console.log("HHHHHHHHHHHHHHHHH", decoded_fileSize, decoded_mp3_size);
-          console.log("UUUUUUUUUUUUUU", mp3FileSize);
         }
         console.log("The value: ", decodedValue);
       }

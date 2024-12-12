@@ -12,6 +12,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import base64 from 'react-native-base64';
 
 import manager from '../../bluetooth/BLEManagerSingleton';
+import { UUIDS } from '../../constants';
 
 
 /**
@@ -25,13 +26,13 @@ import manager from '../../bluetooth/BLEManagerSingleton';
  */
 const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ deviceId, deviceName }) => {
     // Service UUID and UUID's for each characteristic used on this screen.
-    const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
-    const MIC_UUID = '00000401-710e-4a5b-8d75-3e5b444bc3cf';
-    const CAMERA_UUID = '00000402-710e-4a5b-8d75-3e5b444bc3cf';
-    const TEMP_UUID = '00000403-710e-4a5b-8d75-3e5b444bc3cf';
-    const AIRQUALITY_UUID = '00000404-710e-4a5b-8d75-3e5b444bc3cf';
-    const SCALE_UUID = '00000405-710e-4a5b-8d75-3e5b444bc3cf';
-    const CPU_UUID = '00000406-710e-4a5b-8d75-3e5b444bc3cf';
+    // const SERVICE_UUID = '00000001-710e-4a5b-8d75-3e5b444bc3cf';
+    // const MIC_UUID = '00000401-710e-4a5b-8d75-3e5b444bc3cf';
+    // const CAMERA_UUID = '00000402-710e-4a5b-8d75-3e5b444bc3cf';
+    // const TEMP_UUID = '00000403-710e-4a5b-8d75-3e5b444bc3cf';
+    // const AIRQUALITY_UUID = '00000404-710e-4a5b-8d75-3e5b444bc3cf';
+    // const SCALE_UUID = '00000405-710e-4a5b-8d75-3e5b444bc3cf';
+    // const CPU_UUID = '00000406-710e-4a5b-8d75-3e5b444bc3cf';
 
     // Define the type for Variables, so we can access and change our variable values.
     type VariablesType = {
@@ -75,12 +76,12 @@ const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ device
      * 
      */
     const fetchData = async () => {
-        await readCharacteristic(SERVICE_UUID, MIC_UUID, 'audio');
-        await readCharacteristic(SERVICE_UUID, CAMERA_UUID, 'video');
-        await readCharacteristic(SERVICE_UUID, TEMP_UUID, 'temp');
-        await readCharacteristic(SERVICE_UUID, AIRQUALITY_UUID, 'airquality');
-        await readCharacteristic(SERVICE_UUID, SCALE_UUID, 'scale');
-        await readCharacteristic(SERVICE_UUID, CPU_UUID, 'cpu');
+        await readCharacteristic(UUIDS.SERVICE, UUIDS.MIC_CHAR, 'audio');
+        await readCharacteristic(UUIDS.SERVICE, UUIDS.CAMERA_CHAR, 'video');
+        await readCharacteristic(UUIDS.SERVICE, UUIDS.TEMP_CHAR, 'temp');
+        await readCharacteristic(UUIDS.SERVICE, UUIDS.AIRQUALITY_CHAR, 'airquality');
+        await readCharacteristic(UUIDS.SERVICE, UUIDS.SCALE_CHAR, 'scale');
+        await readCharacteristic(UUIDS.SERVICE, UUIDS.CPU_CHAR, 'cpu');
     };
 
 
@@ -180,22 +181,22 @@ const SensorsTab: React.FC<{ deviceId: string, deviceName: string }> = ({ device
     */
     const submitChanges = async() => {
         if (variables.audio !== originalVariables.audio) {
-          writeCharacteristic(SERVICE_UUID, MIC_UUID, 'audio');
+          writeCharacteristic(UUIDS.SERVICE, UUIDS.MIC_CHAR, 'audio');
         }
         if (variables.video !== originalVariables.video) {
-            writeCharacteristic(SERVICE_UUID, CAMERA_UUID, 'video');
+            writeCharacteristic(UUIDS.SERVICE, UUIDS.CAMERA_CHAR, 'video');
         }
         if (variables.temp !== originalVariables.temp) {
-            writeCharacteristic(SERVICE_UUID, TEMP_UUID, 'temp');
+            writeCharacteristic(UUIDS.SERVICE, UUIDS.TEMP_CHAR, 'temp');
         }
         if (variables.airquality !== originalVariables.airquality) {
-            writeCharacteristic(SERVICE_UUID, AIRQUALITY_UUID, 'airquality');
+            writeCharacteristic(UUIDS.SERVICE, UUIDS.AIRQUALITY_CHAR, 'airquality');
         }
         if (variables.scale !== originalVariables.scale) {
-            writeCharacteristic(SERVICE_UUID, SCALE_UUID, 'scale');
+            writeCharacteristic(UUIDS.SERVICE, UUIDS.SCALE_CHAR, 'scale');
         }
         if (variables.cpu !== originalVariables.cpu) {
-            writeCharacteristic(SERVICE_UUID, CPU_UUID, 'cpu');
+            writeCharacteristic(UUIDS.SERVICE, UUIDS.CPU_CHAR, 'cpu');
         }
   
         console.log("Variables updated successfully.");

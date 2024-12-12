@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+/*import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { BleManager } from 'react-native-ble-plx';
@@ -233,4 +233,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default DataTab;
+export default DataTab;*/
