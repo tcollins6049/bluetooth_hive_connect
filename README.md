@@ -4,6 +4,8 @@
 
 This React Native application connects to a Raspberry Pi GATT server to monitor and manage various data points from a beehive. The application allows users to input a password, verify it with the server, and then access real-time data from the beehive, from sensor readings. The application is written in TypeScript and uses various libraries for charts and BLE communication.
 
+Additional and more in depth documentation located in the 'docs' folder. This additional documentation contains a application usage tutorial.
+
 ## Features
 
 - **BLE Hive Connection:** Connects to a Raspberry Pi GATT server.
