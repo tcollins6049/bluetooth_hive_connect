@@ -14,6 +14,7 @@ This React Native application connects to a Raspberry Pi GATT server to monitor 
 - **Pi Modifications:** Allows commands and modification of config file variables
 
 ## Installation
+Follow the steps below to get and run code on your own machine. If you just want to download the application and do not need the code on your machine then click the download link below:
 
 ### Prerequisites
 
@@ -76,6 +77,7 @@ beemon_bluetooth_project
 |       |   DeviceDetailsScreen.tsx
 |       |   DeviceListScreen.tsx
 |       |   PasswordScreen.tsx
+|
 └───docs (Find more in depth documentation here)
  
 ```
@@ -88,9 +90,17 @@ beemon_bluetooth_project
    - In function Det_GraphData, add else if for new specific sensor.
 - DeviceDetailsScreen.tsx:
    - Update get_graph_data() with new sensor.
-   - 
+ 
+### 2. Registering a New Device (Raspberry Pi)
+In order to add a new device, you need to modify the 'src/registered_devices.tsx' file. This file contains a list of registered devices. Each device in the list looks like this:
+```
+{ id: 'E4:5F:01:5F:AF:73', name: 'rpi4-60' }
+```
+To register a new device, add a new entry to the list including the MAC address and name of the new device.
 
-### 2. Changing Password
+- If you are having connection issues when trying to connect to this new device. Try using the 'SCAN' button within the application. This should scan for and pick up the new device. It will then display the correct MAC address of this device in case the MAC address was input incorrectly.
+
+### 3. Changing Password
 The password is currently stored in a .txt file in the GATT_Server directory on the Raspberry Pi. In order to change this password, you need to just go into this file and change the password.
 
 However, you will probably also want to change the path of where this file is located. Once you change the path, you will need to update the characteristic on the GATT server so that it can find the file. Do this through the steps below:
