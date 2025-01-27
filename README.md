@@ -44,9 +44,11 @@ Below are the important elements of the file structure for the application. For 
 beemon_bluetooth_project
 │   README.md
 │   App.tsx
-|   registered_devices.tsx
 │
 └───src
+|   constants.tsx
+|   registered_devices.tsx
+|
 │   └───bluetooth
 │       │   app_permissions.tsx
 │       │   appmaisCheck.tsx
@@ -70,9 +72,11 @@ beemon_bluetooth_project
 |       |       |   modifications.tsx
 |       |       |   sensors.tsx
 |       |       |   video_tab.tsx
+|       |   Det_FileRead.tsx
 |       |   DeviceDetailsScreen.tsx
 |       |   DeviceListScreen.tsx
 |       |   PasswordScreen.tsx
+└───docs (Find more in depth documentation here)
  
 ```
 
