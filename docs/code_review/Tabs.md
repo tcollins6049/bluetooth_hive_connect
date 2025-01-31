@@ -1,7 +1,7 @@
 # Tabs Directory Documentation
-Directory containing all tabs used within the app. This includes the modifications, sensors, commands, video_tab, and audio_tab tab files. 
+This file goes over the files modifications.tsx, commands.tsx, video_tab.tsx, and sensors.tsx. These are all located at 'src/views/tabs'.
 
-## **modifications.tsx**
+# **modifications.tsx**
 File responsible for displaying list of modifiable variables from the beemon-config.ini file on the Raspberry Pi. These variables include:
 * *capture_window_start_time* -- At what time the AppMAIS process starts recording.
 * *capture_window_end_time* -- At what time the AppMAIS process ends recording.
@@ -10,6 +10,21 @@ File responsible for displaying list of modifiable variables from the beemon-con
   
 The app shows two sets of these variables. One set is for the camera and the other set for all the other sensors. This is so that the camera can be set to record at different times than the other sensors.
 
+<img src="../images/bt_modifications_tab.jpg" alt="drawing" width="400"/>
+
+
+## Variables
+### *variables, setVariables useState*
+Keeps track of the current config variable values.
+
+### *changedVariables useState*
+Keeps track of variables that have been changed.
+
+### *originalVariables useState*
+Keeps track of the original variable values. Used to make sure we don't update variables unless they have been changed.
+
+
+## Methods
 ### *readCharacteristic()*
 Method used to read from a characteristic on the Raspberry Pi. Needs the UUID of the characteristic being read from.
 
