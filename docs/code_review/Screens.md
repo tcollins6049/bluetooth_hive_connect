@@ -26,6 +26,8 @@ ______________________________________________
 ## **DeviceDetailsScreen.tsx**
 File holding the home page of the application. The methods in this file are responsible for getting data for each of the sensors. The data for this screen comes from the saved sensor files on the Raspberry Pi obtained through the AppMAIS recording process. 
 
+<img src="../images/bt_deviceDetails.jpg" alt="drawing" width="500"/>
+
 ### Methods for handling graph data
 #### *get_graph_data()*
 Acts as the main method for getting data for the line graphs to display. Creates a structure for each sensor to hold the results and calls the processData() function for each sensor.
