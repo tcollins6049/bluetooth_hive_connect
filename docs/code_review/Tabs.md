@@ -10,7 +10,7 @@ File responsible for displaying list of modifiable variables from the beemon-con
   
 The app shows two sets of these variables. One set is for the camera and the other set for all the other sensors. This is so that the camera can be set to record at different times than the other sensors.
 
-<img src="../images/bt_modifications_tab.jpg" alt="drawing" width="400"/>
+<img src="../images/bt_modifications_tab.jpg" alt="drawing" width="250"/>
 
 
 ### Variables
@@ -44,7 +44,7 @@ _______________________________________
 ## **commands.tsx**
 File responsible for screen which is used to send commands from the application to run on the Raspberry Pi. 
 
-<img src="../images/bt_command_tab.jpg" alt="drawing" width="400"/>
+<img src="../images/bt_command_tab.jpg" alt="drawing" width="250"/>
 
 ### Variables
 More detail about important variables before getting into methods
@@ -70,7 +70,7 @@ ___________________________________________________
 ## **sensorStates.tsx**
 File responsible for displaying a list of sensors currently connected to the Pi. It displays each sensor and shows if the sensor is currently on or off. Here the user can turn sensors on and off. This works by changing the *auto_start* variable in the config file.
 
-<img src="../images/bt_sensorstate_tab.jpg" alt="drawing" width="400"/>
+<img src="../images/bt_sensorstate_tab.jpg" alt="drawing" width="250"/>
 
 ### Variables
 #### *Variables ending in UUID*
@@ -109,7 +109,7 @@ File responsible for functions and data involving camera connected to Raspberry 
 - 'Download Frame': When this is pressed, it pulls a frame from the most recent video and displays it for the user.
 - 'Take picture': There may not be a video still on the Pi. To make sure that the camera is working, the user can press this button. This takes a picture using the camera attached to the pi and then displays it to the user.
 
-<img src="../images/bt_video_tab.jpg" alt="drawing" width="400"/>
+<img src="../images/bt_video_tab.jpg" alt="drawing" width="250"/>
 
 ### Variables
 Details about important variables before getting into methods.
