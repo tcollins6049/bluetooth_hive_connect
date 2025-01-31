@@ -23,7 +23,7 @@ Modal goes along with each line graph in the application. Provides a detailed vi
 
 Also displays nan count (including interpolated values) and failure count (3 or more nan readings in a row).
 
-<img src="../images/bt_nanModal.jpg" alt="drawing" width="300"/>
+<img src="../images/bt_nanModal.jpg" alt="drawing" width="250"/>
 
 ## **ScanningModal.tsx**
 Modal displayed when the 'scan for devices' button is pressed on the start screen. Displays a loading icon and found devices as they are found.
