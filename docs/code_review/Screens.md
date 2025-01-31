@@ -19,7 +19,7 @@ ______________________________________
 ## **PasswordScreen.tsx**
 File responsible for the password screen in the application. Where the user enters password in order to have access to the Raspberry Pi.
 
-<img src="../images/bt_devicelist_screen.jpg" alt="drawing" width="250"/>
+<img src="../images/bt_password.jpg" alt="drawing" width="250"/>
 
 ### *handlePasswordSubmit()*
 Takes user input and writes it to characteristic on GATT server located on Raspberry Pi. It then reads the response from the Pi determining if the password was correct or not. If the password was correct, it navigates you to DeviceDetailScreen.
