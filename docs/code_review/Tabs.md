@@ -2,7 +2,6 @@
 This file goes over the files modifications.tsx, commands.tsx, video_tab.tsx, and sensors.tsx. These are all located at 'src/views/tabs'.
 
 ## <h2 style="color:blue">modifications.tsx</h2>
-![Modifications](https://img.shields.io/badge/modifications.tsx-blue)
 File responsible for displaying list of modifiable variables from the beemon-config.ini file on the Raspberry Pi. These variables include:
 * *capture_window_start_time* -- At what time the AppMAIS process starts recording.
 * *capture_window_end_time* -- At what time the AppMAIS process ends recording.
