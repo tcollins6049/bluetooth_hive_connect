@@ -4,7 +4,7 @@ More information on the files containing each primary screen for the application
 ## **DeviceListScreen.tsx**
 File for the start screen of the application. Displays a list of registered Raspberry Pi's. Can connect to a registered device or scan for unregistered devices.
 
-<img src="../images/bt_devicelist_screen.jpg" alt="drawing" width="300"/>
+<img src="../images/bt_devicelist_screen.jpg" alt="drawing" width="250"/>
 
 ### *connectToDevice()*
 Method responsible for connecting application to Raspberry Pi. This method attempts a connection, if successful it navigates to the password screen. If unsuccessful it calls showRetryAlert(). 
@@ -19,6 +19,8 @@ ______________________________________
 ## **PasswordScreen.tsx**
 File responsible for the password screen in the application. Where the user enters password in order to have access to the Raspberry Pi.
 
+<img src="../images/bt_devicelist_screen.jpg" alt="drawing" width="250"/>
+
 ### *handlePasswordSubmit()*
 Takes user input and writes it to characteristic on GATT server located on Raspberry Pi. It then reads the response from the Pi determining if the password was correct or not. If the password was correct, it navigates you to DeviceDetailScreen.
 
@@ -26,7 +28,7 @@ ______________________________________________
 ## **DeviceDetailsScreen.tsx**
 File holding the home page of the application. The methods in this file are responsible for getting data for each of the sensors. The data for this screen comes from the saved sensor files on the Raspberry Pi obtained through the AppMAIS recording process. 
 
-<img src="../images/bt_deviceDetails.jpg" alt="drawing" width="300"/>
+<img src="../images/bt_deviceDetails.jpg" alt="drawing" width="250"/>
 
 ### Methods for handling graph data
 #### *get_graph_data()*
