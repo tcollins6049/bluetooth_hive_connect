@@ -40,7 +40,7 @@ Method which writes new values to variables in the config file. Only writes a va
 #### *handleSubmit()*
 Method called when the submit button is pressed. Checks if any variables have been changed to make sure were not needlessly updating variables. If variables have been changed then it shows the 'are you sure' modal. If the user then presses 'yes' then submitChanges() is called to update the variables.
 
-
+_________________________________________________________________________________________________________________________________________________________________
 ## **commands.tsx**
 File responsible for screen which is used to send commands from the application to run on the Raspberry Pi. 
 
