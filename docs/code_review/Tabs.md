@@ -40,7 +40,7 @@ Method which writes new values to variables in the config file. Only writes a va
 #### *handleSubmit()*
 Method called when the submit button is pressed. Checks if any variables have been changed to make sure were not needlessly updating variables. If variables have been changed then it shows the 'are you sure' modal. If the user then presses 'yes' then submitChanges() is called to update the variables.
 
-_________________________________________________________________________________________________________________________________________________________________
+_______________________________________
 ## **commands.tsx**
 File responsible for screen which is used to send commands from the application to run on the Raspberry Pi. 
 
@@ -66,7 +66,7 @@ Used to set visibility of the AppTimingModal. We don't want to send a command wh
 #### *sendCommand()*
 Method used to send the command entered by the user to the Rasbperry Pi. 
 
-___
+___________________________________________________
 ## **sensorStates.tsx**
 File responsible for displaying a list of sensors currently connected to the Pi. It displays each sensor and shows if the sensor is currently on or off. Here the user can turn sensors on and off. This works by changing the *auto_start* variable in the config file.
 
@@ -101,7 +101,7 @@ Method used to write changed sensor states to config file. Onyl updates sensor s
 #### *handleSubmit()*
 Shows the 'Are you sure?' modal. If the user presses yes on that modal then it calls submitChanges() to update the sensor states.
 
-
+__________________________________________________
 ## **video_tab.md**
 File responsible for functions and data involving camera connected to Raspberry Pi. Those include:
 - File size and recording date and time of most recent video recording on Pi.
