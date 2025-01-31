@@ -18,7 +18,7 @@ __________________________________
 ## **SideMenu.tsx**
 File containing the side menu component. This menu allows users to navigate to different screens within the application, including Modifications, Audio, and Video. 
 
-The menu slides in and out using an animated effect and includes a button that transforms into an "X" when expanded.
+The menu slides in and out using an animated effect.
 
 ### *toggleMenu()*
 Method that handles the opening and closing of the side menu using React Native's `Animated` API.
