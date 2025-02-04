@@ -17,6 +17,7 @@ Additional and more in depth documentation located in the 'docs' folder. This ad
 
 ## Installation
 Follow the steps below to get and run code on your own machine. If you just want to download the application and do not need the code on your machine then click the download link below:
+[Download the APK](https://drive.google.com/file/d/1llnYJXUNPL4V-Lck0JGq8nCq1tTR_Ewu/view?usp=drive_link)
 
 ### Prerequisites
 
