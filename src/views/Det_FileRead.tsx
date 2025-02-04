@@ -1,7 +1,7 @@
 import base64 from 'react-native-base64';
 import { Buffer } from 'buffer';
-import manager from '../../bluetooth/BLEManagerSingleton';
-import { UUIDS } from '../../constants';
+import manager from '../bluetooth/BLEManagerSingleton';
+import { UUIDS } from '../constants';
 
 
 // Service UUID and UUID's for characteristics used here.

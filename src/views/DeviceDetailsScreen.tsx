@@ -17,7 +17,7 @@ import SideMenu from '../components/SideMenu';
 import manager from '../bluetooth/BLEManagerSingleton';
 import LineGraph from '../components/Line_graph';
 import NanModal from '../modals/NanModal'
-import Det_FileRead from './Det_Components/Det_FileRead';
+import Det_FileRead from './Det_FileRead';
 import { UUIDS } from '../constants';
 
 
